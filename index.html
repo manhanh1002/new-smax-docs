@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Smax.ai Tài liệu - Sửa lỗi bố cục nội dung</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <style type="text/tailwindcss">
+        :root {
+            --primary: #FB6E5C;
+            --background-light: #F9FAFB;
+            --background-dark: #0F172A;
+            --surface-light: #FFFFFF;
+            --surface-dark: #1E293B;
+            --header-height: 64px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }.prose pre {
+            background-color: #1e293b !important;
+            border-radius: 0.75rem;
+            max-width: 100%;
+            overflow-x: auto !important;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        .prose img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FB6E5C",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#0F172A",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1E293B",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <div id="mobile-menu-backdrop"
+        class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden transition-opacity opacity-0"></div>
+    <header
+        class="fixed top-0 left-0 right-0 h-[var(--header-height)] bg-surface-light dark:bg-surface-dark border-b border-slate-200 dark:border-slate-800 z-[60] flex items-center justify-between px-0">
+        <div
+            class="w-auto lg:w-64 px-4 lg:px-6 flex items-center gap-3 border-r-0 lg:border-r border-slate-200 dark:border-slate-800 h-full shrink-0">
+            <button id="mobile-menu-btn"
+                class="p-2 -ml-2 mr-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 lg:hidden">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <a href="#" class="flex items-center gap-3">
+                <img src="assets/SmaxAi-Light Mode.svg" alt="Smax.ai Logo"
+                    class="h-8 object-contain block dark:hidden" />
+                <img src="assets/SmaxAi-Dark Mode.svg" alt="Smax.ai Logo"
+                    class="h-8 object-contain hidden dark:block" />
+                <span class="font-bold text-lg tracking-tight whitespace-nowrap text-slate-900 dark:text-white">Tài
+                    Liệu</span>
+            </a>
+        </div>
+        <div class="flex-1 max-w-xl px-8">
+            <div class="relative group">
+                <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg transition-colors group-focus-within:text-primary">search</span>
+                <input
+                    class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-transparent focus:border-primary focus:ring-0 rounded-lg text-sm transition-all"
+                    placeholder="Tìm kiếm tài liệu..." type="text" />
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <kbd
+                        class="px-1.5 py-0.5 text-[10px] font-sans font-semibold text-slate-400 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700">⌘</kbd>
+                    <kbd
+                        class="px-1.5 py-0.5 text-[10px] font-sans font-semibold text-slate-400 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700">K</kbd>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-6 pr-6">
+            <nav class="hidden lg:flex items-center gap-6">
+                <a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+                    href="#">Tài nguyên</a>
+                <a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+                    href="#">Bảng giá</a>
+                <a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+                    href="#">Cộng đồng</a>
+                <a class="text-sm font-bold text-primary bg-orange-50 dark:bg-primary/20 hover:bg-orange-100 dark:hover:bg-primary/30 border border-primary px-4 py-2 rounded-lg transition-all"
+                    href="#">SmaxAi</a>
+            </nav>
+            <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-700 hidden lg:block"></div>
+            <div class="flex items-center gap-4">
+                <button class="relative text-slate-500 hover:text-primary transition-colors p-1">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span
+                        class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-surface-dark"></span>
+                </button>
+                <button
+                    class="w-8 h-8 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 hover:ring-2 hover:ring-primary/20 transition-all">
+                    <img alt="Ảnh đại diện" class="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRiw3UWIvmaTDUB_h8TWBoYxyqFDNGVpM9zNjkpZK95PcwbOMt4jHxDySCYzsuHfaPeTVXzmP3daD3rytnIJMgHzLAcS1Y9AfEhz5x1NxTW3MIxL6aiNbN3L1KkQ_Xc7m7q71bOBR6UjOe6hk78D-DKRE9xPHPz10czn-l44fBhZItKnhkKorr__joyMPxsomF6_g4xSWTJZl_88OiWSch0uxMSFUuIp5zrdDFQOvISOphYfccdKpz6jKHyGN9LxtPAyM_7q8ESsdM" />
+                </button>
+            </div>
+        </div>
+    </header>
+    <div class="flex pt-[var(--header-height)] relative">
+        <aside id="main-sidebar"
+            class="w-64 border-r border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark flex flex-col fixed inset-y-0 top-[var(--header-height)] z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+            <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+                <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                    <span class="font-medium text-sm">Tổng quan</span>
+                </a>
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between px-3 py-2 text-slate-900 dark:text-slate-100">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[20px] text-slate-500">description</span>
+                            <span class="font-medium text-sm">Tài liệu</span>
+                        </div>
+                        <span class="material-symbols-outlined text-xs text-slate-400">expand_more</span>
+                    </div>
+                    <div class="ml-5 pl-4 border-l border-slate-200 dark:border-slate-800 space-y-1">
+                        <a class="flex items-center px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                            href="#">
+                            <span class="text-[13px] font-medium">Bắt đầu</span>
+                        </a>
+                        <a class="flex items-center px-3 py-1.5 bg-primary/10 text-primary rounded-md transition-colors"
+                            href="#">
+                            <span class="text-[13px] font-semibold">Hướng dẫn sử dụng</span>
+                        </a>
+                        <a class="flex items-center px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                            href="#">
+                            <span class="text-[13px] font-medium">Ghi chú phát hành</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="space-y-1 mt-2">
+                    <div class="flex items-center justify-between px-3 py-2 text-slate-900 dark:text-slate-100">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[20px] text-slate-500">memory</span>
+                            <span class="font-medium text-sm">Mô hình</span>
+                        </div>
+                        <span class="material-symbols-outlined text-xs text-slate-400">expand_more</span>
+                    </div>
+                    <div class="ml-5 pl-4 border-l border-slate-200 dark:border-slate-800 space-y-1">
+                        <a class="flex items-center px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                            href="#">
+                            <span class="text-[13px] font-medium">LLMs</span>
+                        </a>
+                        <a class="flex items-center px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                            href="#">
+                            <span class="text-[13px] font-medium">Thị giác máy tính</span>
+                        </a>
+                        <a class="flex items-center px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                            href="#">
+                            <span class="text-[13px] font-medium">Âm thanh</span>
+                        </a>
+                    </div>
+                </div>
+                <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">storage</span>
+                    <span class="font-medium text-sm">Bộ dữ liệu</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">code</span>
+                    <span class="font-medium text-sm">Tài liệu API</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+                <a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">history</span>
+                    <span class="font-medium text-sm">Hoạt động</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="font-medium text-sm">Cài đặt</span>
+                </a>
+                <button
+                    class="flex items-center w-full gap-3 px-3 py-2 mt-4 text-slate-400 hover:text-primary transition-colors"
+                    onclick="document.documentElement.classList.toggle('dark')">
+                    <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+                    <span class="font-medium text-sm">Giao diện</span>
+                </button>
+            </div>
+        </aside>
+        <main class="flex-1 lg:ml-64 xl:mr-64 min-h-screen">
+            <div class="max-w-4xl mx-auto px-6 py-12 lg:px-12">
+                <div class="flex items-center justify-between mb-6">
+                    <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                        <a class="hover:text-primary transition-colors" href="#">Tài liệu</a>
+                        <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        <a class="hover:text-primary transition-colors" href="#">Hướng dẫn sử dụng</a>
+                    </nav>
+                    <div class="relative">
+                        <button id="copy-dropdown-btn"
+                            class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary dark:hover:border-primary transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                            <span>Copy</span>
+                            <span class="material-symbols-outlined text-[18px]">expand_more</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="copy-dropdown-menu"
+                            class="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-50 hidden transform origin-top-right transition-all">
+                            <button onclick="copyPageContent()"
+                                class="w-full flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg group text-left transition-colors">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:text-primary mt-0.5">content_copy</span>
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Copy page</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Copy page as Markdown for
+                                        LLMs</div>
+                                </div>
+                            </button>
+                            <div class="h-[1px] bg-slate-100 dark:bg-slate-700 my-1 mx-2"></div>
+                            <button
+                                class="w-full flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg group text-left transition-colors">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:text-primary mt-0.5">markdown</span>
+                                <div>
+                                    <div
+                                        class="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                                        View as Markdown
+                                        <span
+                                            class="material-symbols-outlined text-[14px] -rotate-45">arrow_forward</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">View this page as plain text
+                                    </div>
+                                </div>
+                            </button>
+                            <div class="h-[1px] bg-slate-100 dark:bg-slate-700 my-1 mx-2"></div>
+                            <button
+                                class="w-full flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg group text-left transition-colors">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:text-primary mt-0.5">smart_toy</span>
+                                <div>
+                                    <div
+                                        class="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                                        Open in ChatGPT
+                                        <span
+                                            class="material-symbols-outlined text-[14px] -rotate-45">arrow_forward</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Ask ChatGPT about this page
+                                    </div>
+                                </div>
+                            </button>
+                            <button
+                                class="w-full flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg group text-left transition-colors">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:text-primary mt-0.5">psychology</span>
+                                <div>
+                                    <div
+                                        class="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                                        Open in Claude
+                                        <span
+                                            class="material-symbols-outlined text-[14px] -rotate-45">arrow_forward</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Ask Claude about this page
+                                    </div>
+                                </div>
+                            </button>
+                            <div class="h-[1px] bg-slate-100 dark:bg-slate-700 my-1 mx-2"></div>
+                            <button
+                                class="w-full flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg group text-left transition-colors">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:text-primary mt-0.5">link</span>
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Connect with MCP
+                                    </div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Copy the MCP Server URL
+                                    </div>
+                                </div>
+                            </button>
+                            <button
+                                class="w-full flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg group text-left transition-colors">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:text-primary mt-0.5">code</span>
+                                <div>
+                                    <div
+                                        class="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                                        Connect to VSCode
+                                        <span
+                                            class="material-symbols-outlined text-[14px] -rotate-45">arrow_forward</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">Install MCP Server on VSCode
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <header class="mb-10">
+                    <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 mb-4">Hướng dẫn:
+                        Tinh chỉnh LLMs</h1>
+                    <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                        <div class="flex items-center gap-1.5">
+                            <img alt="Tác giả" class="w-6 h-6 rounded-full"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRiw3UWIvmaTDUB_h8TWBoYxyqFDNGVpM9zNjkpZK95PcwbOMt4jHxDySCYzsuHfaPeTVXzmP3daD3rytnIJMgHzLAcS1Y9AfEhz5x1NxTW3MIxL6aiNbN3L1KkQ_Xc7m7q71bOBR6UjOe6hk78D-DKRE9xPHPz10czn-l44fBhZItKnhkKorr__joyMPxsomF6_g4xSWTJZl_88OiWSch0uxMSFUuIp5zrdDFQOvISOphYfccdKpz6jKHyGN9LxtPAyM_7q8ESsdM" />
+                            <span>Viết bởi Sarah Miller</span>
+                        </div>
+                        <span>•</span>
+                        <span>Cập nhật lần cuối 14 Th10, 2023</span>
+                        <span>•</span>
+                        <span class="flex items-center gap-1"><span
+                                class="material-symbols-outlined text-xs">schedule</span> 12 phút đọc</span>
+                    </div>
+                </header>
+                <article
+                    class="prose prose-slate dark:prose-invert max-w-full prose-headings:scroll-mt-24 overflow-hidden">
+                    <h2 id="introduction">Giới thiệu</h2>
+                    <p>Tinh chỉnh (Fine-tuning) là một bước quan trọng trong việc điều chỉnh các mô hình ngôn ngữ lớn
+                        (LLMs) cho các lĩnh vực hoặc tác vụ cụ thể. Trong khi các mô hình cơ sở sở hữu kiến thức rộng
+                        lớn, chúng thường thiếu sắc thái hoặc thuật ngữ chuyên ngành cần thiết cho các ứng dụng doanh
+                        nghiệp cụ thể. Hướng dẫn này bao gồm quy trình làm việc từ đầu đến cuối để tinh chỉnh các kiến
+                        trúc dựa trên transformer mới nhất của chúng tôi.</p>
+                    <div class="my-8 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                        <img alt="Minh họa kiến trúc LLM" class="w-full h-auto object-cover max-h-[400px]"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu7uZf2_1-qNEK-lYH5CSVwAAhkRn41KTty-OcjtkT7ZQnBMC-GfmBM47P_FcUemFrVCgAVV_VFoSsuuaGkr6FRW15MzMRDlN9X9ChsA3ZA1bquw2ovsUHPV8vkNvZE8GjiIYfL2Bb_tyX_182HTJLL87ms3FZg6Q4n0sZBXfyJw1LqRry0y_NN19_9uotE6ydpsvsIy6bCTtvOXyc1U3S6UxBAX-lolVt7hznDXCBm7uZPWOGy17kVVZbysSg1q68A6t7aai8rXrd" />
+                        <div
+                            class="bg-slate-50 dark:bg-slate-800/50 p-3 text-center text-xs text-slate-500 dark:text-slate-400 italic">
+                            Hình 1: Tổng quan cấp cao về quy trình tinh chỉnh có giám sát (SFT).
+                        </div>
+                    </div>
+                    <h2 id="prerequisites">Điều kiện tiên quyết</h2>
+                    <p>Trước khi bắt đầu quá trình tinh chỉnh, hãy đảm bảo bạn đã cấu hình các tài nguyên và quyền hạn
+                        sau:</p>
+                    <ul>
+                        <li><strong>Tài nguyên tính toán:</strong> Ít nhất 2 GPU A100 (80GB) cho các mô hình có tối đa
+                            13 tỷ tham số.</li>
+                        <li><strong>Truy cập API:</strong> Quyền Quản trị viên trên bảng điều khiển AI Hub.</li>
+                        <li><strong>Môi trường Python:</strong> Python 3.9+ với <code>hub-sdk</code> đã được cài đặt.
+                        </li>
+                    </ul>
+                    <h2 id="data-preparation">Chuẩn bị dữ liệu</h2>
+                    <p>Dữ liệu chất lượng cao là yếu tố quan trọng nhất để tinh chỉnh thành công. Bộ dữ liệu của bạn nên
+                        tuân theo định dạng JSONL, trong đó mỗi dòng đại diện cho một ví dụ huấn luyện duy nhất.</p>
+                    <div class="relative group my-6">
+                        <pre
+                            class="custom-scrollbar p-4 overflow-x-auto"><code class="text-sm text-slate-300">{"instruction": "Phân tích sắc thái của văn bản này.", "input": "Bản cập nhật mới thật tuyệt vời!", "output": "Tích cực"}
+{"instruction": "Tóm tắt tài liệu kỹ thuật.", "input": "LLMs sử dụng transformer...", "output": "Văn bản giải thích cách sử dụng transformer trong LLMs."}</code></pre>
+                    </div>
+                    <p>Chúng tôi khuyên bạn nên có tối thiểu 500 cặp hướng dẫn-đầu ra chất lượng cao để đạt được những
+                        cải thiện đáng kể trong các tác vụ đặc thù của lĩnh vực.</p>
+                    <h2 id="training-process">Quy trình huấn luyện</h2>
+                    <p>Khởi tạo quá trình huấn luyện bằng cách sử dụng lớp <code>HubTrainer</code>. Sự trừu tượng này tự
+                        động xử lý việc huấn luyện phân tán và lưu điểm kiểm tra (checkpointing).</p>
+                    <div class="relative group my-6">
+                        <pre class="custom-scrollbar p-4 overflow-x-auto"><code class="text-sm text-slate-300">from ai_hub import HubTrainer
+trainer = HubTrainer(
+    model_id="llama-3-8b-base",
+    dataset="path/to/my_data.jsonl",
+    learning_rate=2e-5,
+    epochs=3,
+    batch_size=4
+)
+# Bắt đầu công việc huấn luyện
+trainer.train()</code></pre>
+                    </div>
+                    <h2 id="evaluation">Đánh giá &amp; Triển khai</h2>
+                    <p>Sau khi quá trình huấn luyện hoàn tất, mô hình sẽ có sẵn trong tab 'Mô hình' của bạn. Việc chạy
+                        các bài kiểm tra chuẩn (benchmark) trên bộ dữ liệu xác thực là rất cần thiết để đảm bảo không
+                        xảy ra hiện tượng quên lãng thảm họa (catastrophic forgetting).</p>
+                    <div class="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-primary p-5 my-8 rounded-r-lg">
+                        <div class="flex gap-4">
+                            <span class="material-symbols-outlined text-primary shrink-0">info</span>
+                            <div>
+                                <p class="text-sm font-semibold text-orange-900 dark:text-orange-100">Mẹo chuyên gia</p>
+                                <p class="text-sm text-orange-800 dark:text-orange-200 mt-1">Sử dụng 'Evaluation
+                                    Sandbox' tích hợp của chúng tôi để so sánh song song mô hình đã tinh chỉnh với mô
+                                    hình cơ sở.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <footer class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 w-full">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+                        <button
+                            class="flex items-center gap-3 text-left text-slate-500 hover:text-primary transition-all group w-full sm:w-auto">
+                            <span
+                                class="material-symbols-outlined bg-slate-100 dark:bg-slate-800 p-2 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors">arrow_back</span>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold tracking-wider text-slate-400">TRƯỚC ĐÓ</p>
+                                <p
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-300 group-hover:text-primary">
+                                    Bắt đầu</p>
+                            </div>
+                        </button>
+                        <button
+                            class="flex items-center gap-3 text-right text-slate-500 hover:text-primary transition-all group w-full sm:w-auto sm:justify-end">
+                            <div class="text-right">
+                                <p class="text-[10px] uppercase font-bold tracking-wider text-slate-400">TIẾP THEO</p>
+                                <p
+                                    class="text-sm font-semibold text-slate-700 dark:text-slate-300 group-hover:text-primary">
+                                    Triển khai mô hình</p>
+                            </div>
+                            <span
+                                class="material-symbols-outlined bg-slate-100 dark:bg-slate-800 p-2 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors">arrow_forward</span>
+                        </button>
+                    </div>
+                </footer>
+            </div>
+        </main>
+        <aside
+            class="w-64 border-l border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark fixed right-0 inset-y-0 top-[var(--header-height)] p-8 hidden xl:block overflow-y-auto custom-scrollbar z-40">
+            <h4 class="text-xs font-bold uppercase tracking-widest text-slate-900 dark:text-slate-100 mb-6">TRÊN TRANG
+                NÀY</h4>
+            <nav class="space-y-4">
+                <a class="block text-sm font-medium text-primary border-l-2 border-primary pl-4 -ml-[2px]"
+                    href="#introduction">Giới thiệu</a>
+                <a class="block text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 pl-4 border-l-2 border-transparent transition-colors"
+                    href="#prerequisites">Điều kiện tiên quyết</a>
+                <a class="block text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 pl-4 border-l-2 border-transparent transition-colors"
+                    href="#data-preparation">Chuẩn bị dữ liệu</a>
+                <a class="block text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 pl-4 border-l-2 border-transparent transition-colors"
+                    href="#training-process">Quy trình huấn luyện</a>
+                <a class="block text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 pl-4 border-l-2 border-transparent transition-colors"
+                    href="#evaluation">Đánh giá &amp; Triển khai</a>
+            </nav>
+            <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-400 mb-4 font-medium">Trang này có hữu ích không?</p>
+                <div class="flex gap-2">
+                    <button
+                        class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+                        <span class="material-symbols-outlined text-sm">thumb_up</span>
+                    </button>
+                    <button
+                        class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+                        <span class="material-symbols-outlined text-sm">thumb_down</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <script>
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileSidebar = document.getElementById('main-sidebar');
+        const backdrop = document.getElementById('mobile-menu-backdrop');
+
+        function toggleMenu() {
+            const isClosed = mobileSidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden', 'opacity-0');
+            } else {
+                mobileSidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMenu);
+        backdrop.addEventListener('click', toggleMenu);
+
+        // Copy Button Logic
+        const copyBtn = document.getElementById('copy-dropdown-btn');
+        const copyMenu = document.getElementById('copy-dropdown-menu');
+        const copyIcon = copyBtn.querySelector('.material-symbols-outlined:last-child');
+
+        function toggleCopyMenu(e) {
+            e.stopPropagation();
+            copyMenu.classList.toggle('hidden');
+            copyIcon.style.transform = copyMenu.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+
+        function closeCopyMenu() {
+            if (!copyMenu.classList.contains('hidden')) {
+                copyMenu.classList.add('hidden');
+                copyIcon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function copyPageContent() {
+            try {
+                // Get the main article content styling stripped (simplified for now)
+                const article = document.querySelector('article');
+                const text = article ? article.innerText : document.body.innerText;
+
+                await navigator.clipboard.writeText(text);
+
+                // Show feedback (optional, simple alert for now or just console)
+                const originalText = copyBtn.querySelector('span:nth-child(2)').textContent;
+                copyBtn.querySelector('span:nth-child(2)').textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.querySelector('span:nth-child(2)').textContent = 'Copy';
+                    closeCopyMenu();
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        }
+
+        copyBtn.addEventListener('click', toggleCopyMenu);
+        document.addEventListener('click', (e) => {
+            if (!copyMenu.contains(e.target) && !copyBtn.contains(e.target)) {
+                closeCopyMenu();
+            }
+        });
+    </script>
+</body>
+
+</html>

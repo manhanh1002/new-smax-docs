@@ -1,0 +1,104 @@
+export const dictionaries = {
+  vi: {
+    nav: {
+      search: "Tìm kiếm...",
+      mainNav: "Điều hướng chính",
+      openSearch: "Mở tìm kiếm (Cmd+K)",
+      openAi: "Mở trợ lý AI",
+      closeMenu: "Đóng menu",
+    },
+    search: {
+      placeholder: "Tìm kiếm tài liệu...",
+      noResults: "Không tìm thấy kết quả.",
+      pages: "Trang",
+      quickLinks: "Liên kết nhanh",
+      gettingStarted: "Bắt đầu",
+      cliReference: "Tài liệu CLI",
+      close: "Đóng tìm kiếm",
+    },
+    pager: {
+      prev: "Trước",
+      next: "Tiếp",
+    },
+    toc: {
+      title: "Trên trang này",
+    },
+    rating: {
+      helpfulQuestion: "Tài liệu này có hữu ích không?",
+      easyQuestion: "Bạn thấy nó có dễ hiểu không?",
+      bad: "Tệ",
+      normal: "Bình thường",
+      useful: "Hữu ích",
+      notReally: "Không hẳn",
+      easy: "Dễ hiểu",
+      thankYou: "Cảm ơn đóng góp của bạn!",
+    },
+    share: {
+      title: "Chia sẻ tài liệu này",
+      copyLink: "Sao chép link",
+      facebook: "Chia sẻ lên Facebook",
+      email: "Chia sẻ qua Email",
+    },
+    content: {
+      copyPage: "Sao chép trang",
+      copied: "Đã sao chép",
+    },
+    assistant: {
+      title: "Trợ lý",
+      askAnything: "Hỏi bất kỳ điều gì về tài liệu",
+      description: "Nhận câu trả lời ngay lập tức, ví dụ mã và hướng dẫn từ trợ lý AI.",
+      placeholder: "Đặt câu hỏi...",
+    },
+  },
+  en: {
+    nav: {
+      search: "Search...",
+      mainNav: "Main navigation",
+      openSearch: "Open search (Cmd+K)",
+      openAi: "Open AI assistant",
+      closeMenu: "Close menu",
+    },
+    search: {
+      placeholder: "Search documentation...",
+      noResults: "No results found.",
+      pages: "Pages",
+      quickLinks: "Quick links",
+      gettingStarted: "Getting Started",
+      cliReference: "CLI Reference",
+      close: "Close search",
+    },
+    pager: {
+      prev: "Previous",
+      next: "Next",
+    },
+    toc: {
+      title: "On this page",
+    },
+    rating: {
+      helpfulQuestion: "Do you find this doc helpful?",
+      easyQuestion: "Do you find it easy to understand?",
+      bad: "Bad",
+      normal: "Normal",
+      useful: "Useful",
+      notReally: "Not really",
+      easy: "Easy",
+      thankYou: "Thank you for your feedback!",
+    },
+    share: {
+      title: "Share this docs",
+      copyLink: "Copy link",
+      facebook: "Share to Facebook",
+      email: "Share via Email",
+    },
+    content: {
+      copyPage: "Copy page",
+      copied: "Copied",
+    },
+    assistant: {
+      title: "Assistant",
+      askAnything: "Ask anything about the docs",
+      description: "Get instant answers, code examples, and guidance from the AI assistant.",
+      placeholder: "Ask a question...",
+    },
+  },
+}

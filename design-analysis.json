@@ -1,0 +1,417 @@
+{
+  "colors": [
+    {
+      "hex": "#e5e7eb",
+      "rgb": "rgb(229, 231, 235)",
+      "count": 230,
+      "usage": [
+        "border"
+      ]
+    },
+    {
+      "hex": "#f1f5f9",
+      "rgb": "rgb(241, 245, 249)",
+      "count": 121,
+      "usage": [
+        "text"
+      ]
+    },
+    {
+      "hex": "#94a3b8",
+      "rgb": "rgb(148, 163, 184)",
+      "count": 63,
+      "usage": [
+        "text"
+      ]
+    },
+    {
+      "hex": "#cbd5e1",
+      "rgb": "rgb(203, 213, 225)",
+      "count": 24,
+      "usage": [
+        "text"
+      ]
+    },
+    {
+      "hex": "#1e293b",
+      "rgb": "rgb(30, 41, 59)",
+      "count": 20,
+      "usage": [
+        "background",
+        "border"
+      ]
+    },
+    {
+      "hex": "#cccccc",
+      "rgb": "rgb(204, 204, 204)",
+      "count": 12,
+      "usage": [
+        "border"
+      ]
+    },
+    {
+      "hex": "#64748b",
+      "rgb": "rgb(100, 116, 139)",
+      "count": 11,
+      "usage": [
+        "text"
+      ]
+    },
+    {
+      "hex": "#fb6e5c",
+      "rgb": "rgba(251, 110, 92, 0.2)",
+      "count": 10,
+      "usage": [
+        "background",
+        "text",
+        "border"
+      ]
+    },
+    {
+      "hex": "#333333",
+      "rgb": "rgb(51, 51, 51)",
+      "count": 9,
+      "usage": [
+        "text"
+      ]
+    },
+    {
+      "hex": "#555555",
+      "rgb": "rgb(85, 85, 85)",
+      "count": 9,
+      "usage": [
+        "text"
+      ]
+    },
+    {
+      "hex": "#334155",
+      "rgb": "rgb(51, 65, 85)",
+      "count": 6,
+      "usage": [
+        "background",
+        "border"
+      ]
+    },
+    {
+      "hex": "#111111",
+      "rgb": "rgb(17, 17, 17)",
+      "count": 4,
+      "usage": [
+        "text"
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "name": "Inter",
+      "count": 139,
+      "elements": [
+        "body",
+        "header",
+        "div",
+        "button",
+        "a",
+        "span",
+        "nav",
+        "aside",
+        "main",
+        "h1",
+        "article",
+        "h2",
+        "p",
+        "ul",
+        "li",
+        "strong",
+        "footer",
+        "h4",
+        "script",
+        "svg",
+        "defs",
+        "pattern"
+      ],
+      "sample": "menu\n            \n            ...",
+      "usage": "Used in 139 elements"
+    },
+    {
+      "name": "Material Symbols Outlined",
+      "count": 20,
+      "elements": [
+        "span"
+      ],
+      "sample": "menu",
+      "usage": "Used in 20 elements"
+    },
+    {
+      "name": "Arial",
+      "count": 11,
+      "elements": [
+        "label",
+        "button"
+      ],
+      "sample": "HEX",
+      "usage": "Used in 11 elements"
+    },
+    {
+      "name": "ui-sans-serif",
+      "count": 10,
+      "elements": [
+        "html",
+        "head",
+        "title",
+        "style",
+        "script",
+        "kbd"
+      ],
+      "sample": "Smax.ai Tài liệu - Sửa lỗi bố ...",
+      "usage": "Used in 10 elements"
+    },
+    {
+      "name": "ui-monospace",
+      "count": 6,
+      "elements": [
+        "code",
+        "pre"
+      ],
+      "sample": "hub-sdk",
+      "usage": "Used in 6 elements"
+    }
+  ],
+  "typography": [
+    {
+      "type": "heading",
+      "fontSize": "36px",
+      "fontWeight": "800",
+      "lineHeight": "40px",
+      "fontFamily": "Inter",
+      "color": "rgb(248, 250, 252)",
+      "sample": "Hướng dẫn:\n                        Tinh chỉnh LLMs",
+      "tag": "h1"
+    },
+    {
+      "type": "heading",
+      "fontSize": "24px",
+      "fontWeight": "700",
+      "lineHeight": "32px",
+      "fontFamily": "Inter",
+      "color": "rgb(255, 255, 255)",
+      "sample": "Giới thiệu",
+      "tag": "h2"
+    },
+    {
+      "type": "heading",
+      "fontSize": "12px",
+      "fontWeight": "700",
+      "lineHeight": "16px",
+      "fontFamily": "Inter",
+      "color": "rgb(241, 245, 249)",
+      "sample": "TRÊN TRANG\n                NÀY",
+      "tag": "h4"
+    },
+    {
+      "type": "paragraph",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "28px",
+      "fontFamily": "Inter",
+      "color": "rgb(203, 213, 225)",
+      "sample": "Tinh chỉnh (Fine-tuning) là một bước quan trọng tr...",
+      "tag": "p"
+    },
+    {
+      "type": "paragraph",
+      "fontSize": "14px",
+      "fontWeight": "600",
+      "lineHeight": "20px",
+      "fontFamily": "Inter",
+      "color": "rgb(255, 237, 213)",
+      "sample": "Mẹo chuyên gia",
+      "tag": "p"
+    },
+    {
+      "type": "paragraph",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "lineHeight": "20px",
+      "fontFamily": "Inter",
+      "color": "rgb(254, 215, 170)",
+      "sample": "Sử dụng 'Evaluation\n                              ...",
+      "tag": "p"
+    },
+    {
+      "type": "paragraph",
+      "fontSize": "10px",
+      "fontWeight": "700",
+      "lineHeight": "15px",
+      "fontFamily": "Inter",
+      "color": "rgb(148, 163, 184)",
+      "sample": "TRƯỚC ĐÓ",
+      "tag": "p"
+    },
+    {
+      "type": "paragraph",
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "lineHeight": "16px",
+      "fontFamily": "Inter",
+      "color": "rgb(148, 163, 184)",
+      "sample": "Trang này có hữu ích không?",
+      "tag": "p"
+    },
+    {
+      "type": "text",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "fontFamily": "Inter",
+      "color": "rgb(241, 245, 249)",
+      "sample": "menu\n            \n            \n                \n  ...",
+      "tag": "div"
+    },
+    {
+      "type": "text",
+      "fontSize": "24px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "fontFamily": "Material Symbols Outlined",
+      "color": "rgb(148, 163, 184)",
+      "sample": "menu",
+      "tag": "span"
+    },
+    {
+      "type": "text",
+      "fontSize": "18px",
+      "fontWeight": "700",
+      "lineHeight": "28px",
+      "fontFamily": "Inter",
+      "color": "rgb(255, 255, 255)",
+      "sample": "Tài\n                    Liệu",
+      "tag": "span"
+    },
+    {
+      "type": "text",
+      "fontSize": "18px",
+      "fontWeight": "400",
+      "lineHeight": "28px",
+      "fontFamily": "Material Symbols Outlined",
+      "color": "rgb(148, 163, 184)",
+      "sample": "search",
+      "tag": "span"
+    },
+    {
+      "type": "text",
+      "fontSize": "20px",
+      "fontWeight": "400",
+      "lineHeight": "20px",
+      "fontFamily": "Material Symbols Outlined",
+      "color": "rgb(148, 163, 184)",
+      "sample": "grid_view",
+      "tag": "span"
+    },
+    {
+      "type": "text",
+      "fontSize": "14px",
+      "fontWeight": "500",
+      "lineHeight": "20px",
+      "fontFamily": "Inter",
+      "color": "rgb(148, 163, 184)",
+      "sample": "Tổng quan",
+      "tag": "span"
+    }
+  ],
+  "spacing": [
+    {
+      "type": "margin",
+      "value": "4px 0px 0px",
+      "pixels": 4,
+      "count": 2
+    },
+    {
+      "type": "padding",
+      "value": "8px 12px",
+      "pixels": 8,
+      "count": 2
+    },
+    {
+      "type": "margin",
+      "value": "4px 0px 0px 20px",
+      "pixels": 4,
+      "count": 2
+    },
+    {
+      "type": "padding",
+      "value": "0px 0px 0px 16px",
+      "pixels": 0,
+      "count": 2
+    },
+    {
+      "type": "margin",
+      "value": "32px 0px",
+      "pixels": 32,
+      "count": 2
+    },
+    {
+      "type": "margin",
+      "value": "24px 0px",
+      "pixels": 24,
+      "count": 2
+    },
+    {
+      "type": "padding",
+      "value": "32px 0px 0px",
+      "pixels": 32,
+      "count": 2
+    },
+    {
+      "type": "padding",
+      "value": "0px 24px",
+      "pixels": 0,
+      "count": 1
+    },
+    {
+      "type": "padding",
+      "value": "0px 32px",
+      "pixels": 0,
+      "count": 1
+    },
+    {
+      "type": "padding",
+      "value": "0px 24px 0px 0px",
+      "pixels": 0,
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "opacity",
+      "value": "0",
+      "rawValue": "0",
+      "count": 1,
+      "elements": {},
+      "category": "transparency"
+    },
+    {
+      "type": "transform",
+      "value": "matrix(1, 0, 0, 1, 0, -14)",
+      "rawValue": "matrix(1, 0, 0, 1, 0, -14)",
+      "count": 1,
+      "elements": {},
+      "category": "transform"
+    },
+    {
+      "type": "transform",
+      "value": "matrix(1, 0, 0, 1, 0, -10.5)",
+      "rawValue": "matrix(1, 0, 0, 1, 0, -10.5)",
+      "count": 1,
+      "elements": {},
+      "category": "transform"
+    },
+    {
+      "type": "transform",
+      "value": "matrix(1, 0, 0, 1, 0, 0)",
+      "rawValue": "matrix(1, 0, 0, 1, 0, 0)",
+      "count": 1,
+      "elements": {},
+      "category": "transform"
+    }
+  ]
+}

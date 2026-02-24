@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmaxAI Chat Widget SDK - Test Page</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    h1 { color: #111827; margin-bottom: 16px; font-size: 28px; }
+    p { color: #6b7280; margin-bottom: 24px; line-height: 1.6; }
+    .badge {
+      display: inline-block;
+      background: #eef2ff;
+      color: #6366f1;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .note {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      text-align: left;
+      margin-top: 24px;
+      font-size: 14px;
+      color: #92400e;
+    }
+    .success {
+      background: #d1fae5;
+      border-left-color: #10b981;
+      color: #065f46;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge">SDK v1.0.0</span>
+    <h1>🔮 SmaxAI Chat Widget</h1>
+    <p>
+      Widget đã được khởi tạo! Click vào nút <strong>Sparkles</strong> ở góc dưới bên phải để bắt đầu trò chuyện với AI.
+    </p>
+    
+    <div class="note success">
+      <strong>✅ Widget loaded successfully!</strong><br>
+      Check browser console for debug info. Look for the purple button in bottom-right corner.
+    </div>
+  </div>
+
+  <!-- Load SDK from public folder -->
+  <script src="/sdk-dist/smaxai-chat.min.js"></script>
+  <script>
+    // Initialize widget
+    if (typeof SmaxAIChat !== 'undefined') {
+      SmaxAIChat.init({
+        apiBaseUrl: window.location.origin,
+        lang: 'vi',
+        onOpen: () => console.log('✅ Widget opened'),
+        onClose: () => console.log('✅ Widget closed')
+      });
+      console.log('✅ SmaxAI Chat Widget initialized!');
+      console.log('📍 Access widget via: SmaxAIChat.widget');
+    } else {
+      console.error('❌ SmaxAIChat not loaded. Check script path.');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "@smaxai/chat-widget",
+  "version": "1.0.0",
+  "description": "SmaxAI Chat Widget SDK - Embeddable AI chat widget",
+  "main": "dist/smaxai-chat.min.js",
+  "module": "dist/smaxai-chat.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --format=iife --global-name=SmaxAIChat --outfile=dist/smaxai-chat.min.js",
+    "build:esm": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/smaxai-chat.esm.js",
+    "build:all": "npm run build && npm run build:esm",
+    "dev": "esbuild src/index.ts --bundle --format=iife --global-name=SmaxAIChat --outfile=dist/smaxai-chat.js --watch"
+  },
+  "keywords": [
+    "smaxai",
+    "chat",
+    "widget",
+    "ai",
+    "rag"
+  ],
+  "author": "SmaxAI",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.19.0",
+    "typescript": "^5.0.0"
+  }
+}
