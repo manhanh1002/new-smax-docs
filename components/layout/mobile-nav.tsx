@@ -1,14 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { X, ChevronDown } from "lucide-react"
+import Image from "next/image"
+import { usePathname, useParams } from "next/navigation"
+import { X, ChevronDown, ChevronRight, Menu } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
-import { navigation, siteConfig, topNavigation } from "@/lib/docs/nav"
+import { topNavigation, siteConfig } from "@/lib/docs/nav"
 import { ThemeToggle } from "./theme-toggle"
+import { useTheme } from "next-themes"
+import { type NavItem } from "@/lib/docs/nav"
+import { useDocsNavigation } from "@/hooks/use-docs-navigation"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
@@ -25,156 +35,226 @@ interface MobileNavProps {
 
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const pathname = usePathname()
+  const params = useParams()
   const { language, setLanguage } = useLanguage()
+  const { resolvedTheme } = useTheme()
   const [langOpen, setLangOpen] = useState(false)
-  const [sectionOpen, setSectionOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  const t = dictionaries[language]
-  const currentLang = languages.find((l) => l.code === language) || languages[0]
-  const currentSection = topNavigation.find((item) => pathname.startsWith(item.href)) || topNavigation[0]
+  // Use lang from params if available, otherwise from context
+  const lang = (params?.lang as "vi" | "en") || language
+  
+  // Fetch dynamic navigation
+  const { navigation, isLoading } = useDocsNavigation(lang)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const t = dictionaries[lang]
+  const currentLang = languages.find((l) => l.code === lang) || languages[0]
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-full max-w-sm p-0" hideCloseButton>
+      <SheetContent side="left" className="w-full max-w-sm p-0 flex flex-col bg-background" hideCloseButton>
+        <VisuallyHidden>
+          <SheetTitle>Navigation Menu</SheetTitle>
+        </VisuallyHidden>
+        
         <div className="flex flex-col h-full">
-          {/* Header with logo, theme toggle, close button */}
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-card">
             <Link href="/" className="flex items-center gap-2" onClick={() => onOpenChange(false)}>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="h-5 w-5 text-primary-foreground"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <SheetTitle className="font-semibold text-foreground text-base">{siteConfig.name}</SheetTitle>
+              {mounted ? (
+                <div className="relative w-[120px] h-[33px]">
+                  <Image 
+                    src={resolvedTheme === 'dark' ? "/logo-dark.png" : "/logo.png"} 
+                    alt="SmaxAI Logo" 
+                    fill
+                    className="object-contain object-left"
+                    priority
+                    sizes="120px"
+                  />
+                </div>
+              ) : (
+                <div className="w-[120px] h-[33px]" />
+              )}
+              <SheetTitle className="sr-only">{siteConfig.name}</SheetTitle>
             </Link>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => onOpenChange(false)}
-                aria-label={t.nav.closeMenu}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => onOpenChange(false)}
+              aria-label={t.nav.closeMenu}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
 
-          {/* Dropdowns */}
-          <div className="px-4 py-3 space-y-2 border-b border-border">
-            {/* Language dropdown */}
-            <div className="relative">
-              <button
-                className="flex w-full items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-3 text-sm"
-                onClick={() => setLangOpen(!langOpen)}
-              >
-                <div className="flex items-center gap-2">
+          {/* Navigation Content */}
+          <nav className="flex-1 overflow-y-auto p-4">
+            {isLoading ? (
+              <div className="px-2 py-4 text-sm text-muted-foreground">Loading...</div>
+            ) : (
+              navigation.map((section) => (
+                <div key={section.title} className="mb-6">
+                  <div className="mb-2 flex items-center gap-2 px-2 py-1 text-sm font-bold text-foreground uppercase tracking-wider opacity-80">
+                    {section.icon && <section.icon className="h-4 w-4" />}
+                    {section.title}
+                  </div>
+                  <ul className="space-y-1">
+                    {section.items.map((item) => (
+                      <MobileSidebarItem 
+                        key={item.href} 
+                        item={item} 
+                        lang={lang} 
+                        onClose={() => onOpenChange(false)} 
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ))
+            )}
+          </nav>
+
+          {/* Footer Actions */}
+          <div className="border-t border-border p-4 bg-card">
+            <div className="flex items-center justify-between gap-2">
+              <div className="relative">
+                <button
+                  className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-accent"
+                  onClick={() => setLangOpen(!langOpen)}
+                >
                   <span className="text-base">{currentLang.flag}</span>
                   <span>{currentLang.label}</span>
-                </div>
-                <ChevronDown className={cn("h-4 w-4 transition-transform", langOpen && "rotate-180")} />
-              </button>
-              {langOpen && (
-                <div className="absolute left-0 right-0 top-full mt-1 z-10 rounded-lg border border-border bg-background shadow-lg">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      className={cn(
-                        "flex w-full items-center gap-2 px-4 py-2.5 text-sm hover:bg-secondary transition-colors",
-                        lang.code === language && "text-accent",
-                      )}
-                      onClick={() => {
-                        setLanguage(lang.code as "vi" | "en")
-                        setLangOpen(false)
-                      }}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      <span>{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Section dropdown */}
-            <div className="relative">
-              <button
-                className="flex w-full items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-3 text-sm"
-                onClick={() => setSectionOpen(!sectionOpen)}
-              >
-                <span>{currentSection?.title || "Documentation"}</span>
-                <ChevronDown className={cn("h-4 w-4 transition-transform", sectionOpen && "rotate-180")} />
-              </button>
-              {sectionOpen && (
-                <div className="absolute left-0 right-0 top-full mt-1 z-10 rounded-lg border border-border bg-background shadow-lg">
-                  {topNavigation.map((item) => {
-                    const href = item.href.replace("/tai-lieu", `/tai-lieu/${language}`)
-                    return (
-                      <Link
-                        key={item.href}
-                        href={href}
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", langOpen && "rotate-180")} />
+                </button>
+                {langOpen && (
+                  <div className="absolute bottom-full left-0 mb-1 z-10 w-40 rounded-lg border border-border bg-popover shadow-lg">
+                    {languages.map((l) => (
+                      <button
+                        key={l.code}
                         className={cn(
-                          "flex w-full items-center px-4 py-2.5 text-sm hover:bg-secondary transition-colors",
-                          pathname.startsWith(href) && "text-accent",
+                          "flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent first:rounded-t-lg last:rounded-b-lg",
+                          l.code === lang && "bg-accent/50",
                         )}
                         onClick={() => {
-                          setSectionOpen(false)
-                          onOpenChange(false)
+                          setLanguage(l.code as "vi" | "en")
+                          setLangOpen(false)
                         }}
                       >
-                        {item.title}
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
+                        <span className="text-base">{l.flag}</span>
+                        <span>{l.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <ThemeToggle />
             </div>
           </div>
-
-          {/* Navigation sections */}
-          <nav className="overflow-y-auto flex-1 px-4 py-3">
-            {navigation.map((section) => (
-              <div key={section.title} className="mb-4">
-                <div className="mb-2 flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground">
-                  {section.icon && <section.icon className="h-4 w-4" />}
-                  {section.title}
-                </div>
-                <ul className="space-y-0.5">
-                  {section.items.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          onClick={() => onOpenChange(false)}
-                          className={cn(
-                            "flex items-center rounded-lg px-3 py-2 text-sm transition-colors",
-                            isActive
-                              ? "bg-accent/20 text-accent font-medium"
-                              : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                          )}
-                        >
-                          {item.title}
-                        </Link>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            ))}
-          </nav>
         </div>
       </SheetContent>
     </Sheet>
+  )
+}
+
+function MobileSidebarItem({ 
+  item, 
+  lang, 
+  onClose,
+  level = 0
+}: { 
+  item: NavItem; 
+  lang: string;
+  onClose: () => void;
+  level?: number;
+}) {
+  const pathname = usePathname()
+  
+  // Dynamic href based on language
+  let href = item.href
+  if (item.href.includes('/tai-lieu/')) {
+    href = item.href.replace(/\/tai-lieu\/(vi|en)/, `/tai-lieu/${lang}`)
+  } else {
+    href = item.href.replace("/tai-lieu", `/tai-lieu/${lang}`)
+  }
+
+  // Check active state
+  const isActive = pathname === href
+  
+  const hasActiveChild = (items?: NavItem[]): boolean => {
+    if (!items) return false
+    return items.some(i => {
+      const iHref = i.href.replace("/tai-lieu", `/tai-lieu/${lang}`)
+      return iHref === pathname || hasActiveChild(i.items)
+    })
+  }
+  
+  const isChildActive = hasActiveChild(item.items)
+  const isExpanded = isChildActive || (item.items && item.collapsible === false)
+  const [isOpen, setIsOpen] = useState(isExpanded)
+
+  useEffect(() => {
+    if (isExpanded) setIsOpen(true)
+  }, [isExpanded])
+
+  if (item.items?.length) {
+    return (
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+        <li className="relative">
+          <CollapsibleTrigger asChild>
+            <button
+              className={cn(
+                "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:text-primary hover:bg-accent/50",
+                isActive || isChildActive ? "font-medium text-foreground" : "text-muted-foreground",
+                level > 0 && "pl-4"
+              )}
+            >
+              <span className="flex-1 text-left">{item.title}</span>
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 text-muted-foreground/50 transition-transform duration-200",
+                  isOpen && "rotate-90"
+                )}
+              />
+            </button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="animate-in slide-in-from-top-2 fade-in duration-200">
+            <ul className="mt-1 space-y-1 border-l border-border/40 ml-2.5 pl-2">
+              {item.items.map((subItem) => (
+                <MobileSidebarItem 
+                  key={subItem.href} 
+                  item={subItem} 
+                  lang={lang} 
+                  onClose={onClose}
+                  level={level + 1}
+                />
+              ))}
+            </ul>
+          </CollapsibleContent>
+        </li>
+      </Collapsible>
+    )
+  }
+
+  return (
+    <li>
+      <Link
+        href={href}
+        onClick={onClose}
+        className={cn(
+          "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:text-primary hover:bg-accent/50",
+          isActive 
+            ? "font-medium text-primary bg-primary/10" 
+            : "text-muted-foreground",
+          level > 0 && "pl-4"
+        )}
+      >
+        {item.title}
+      </Link>
+    </li>
   )
 }

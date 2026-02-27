@@ -33,6 +33,8 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
   }
 }
 
+export const dynamicParams = false // Disable dynamic params to force static generation
+
 export async function generateStaticParams() {
   const langs = ["vi", "en"] as const
   const params: { lang: string; slug: string[] }[] = []
@@ -72,6 +74,7 @@ export default async function SmaxDocsSlugPage({ params }: DocPageProps) {
         slug={slugPath} 
         lastUpdated={page.last_updated}
         pager={pager}
+        breadcrumbs={page.breadcrumbs}
       />
     </>
   )

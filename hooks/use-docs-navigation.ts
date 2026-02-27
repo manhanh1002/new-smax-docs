@@ -20,14 +20,16 @@ interface DatabaseNavItem {
 
 // Convert database navigation to NavSection format
 function convertToNavSections(items: DatabaseNavItem[], lang: string): NavSection[] {
-  const navItems: NavItem[] = items.map(item => ({
+  const mapItem = (item: DatabaseNavItem): NavItem => ({
     title: item.title,
     href: `/tai-lieu/${lang}/${item.slug}`,
-    items: item.children?.map(child => ({
-      title: child.title,
-      href: `/tai-lieu/${lang}/${child.slug}`,
-    })),
-  }))
+    items: item.children && item.children.length > 0 
+      ? item.children.map(mapItem) 
+      : undefined,
+    collapsible: item.children && item.children.length > 0 ? true : undefined
+  })
+
+  const navItems: NavItem[] = items.map(mapItem)
 
   return [{
     title: 'Documentation',

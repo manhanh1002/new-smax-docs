@@ -621,9 +621,32 @@ export class SmaxAIChatWidget {
         const chunk = decoder.decode(value, { stream: true })
         if (chunk.includes('[DONE]')) break
 
-        fullContent += chunk
-        assistantMessage.content = fullContent
-        this.renderMessages()
+        // Fix for missing first characters - ensure proper chunk handling
+        const lines = chunk.split('\n').filter(line => line.trim() !== '')
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') break
+            
+            try {
+              const parsed = JSON.parse(data)
+              const content = parsed.choices?.[0]?.delta?.content || ''
+              if (content) {
+                fullContent += content
+                assistantMessage.content = fullContent
+                this.renderMessages()
+              }
+            } catch {
+              // Skip invalid JSON chunks
+            }
+          } else if (line.trim() && !line.startsWith('data:')) {
+            // Handle direct text chunks
+            fullContent += line
+            assistantMessage.content = fullContent
+            this.renderMessages()
+          }
+        }
       }
 
       assistantMessage.isStreaming = false

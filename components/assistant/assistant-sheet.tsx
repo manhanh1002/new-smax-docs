@@ -9,6 +9,8 @@ import { MarkdownRenderer } from "@/components/docs/markdown-renderer"
 
 import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
+import { trackAIChat as trackGA } from "@/lib/google-analytics"
+import { trackAnalyticsEvent } from "@/lib/actions/admin"
 
 interface Message {
   id: string
@@ -66,6 +68,8 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
     setMessages(prev => [...prev, userMessage, assistantMessage])
     setQuery("")
     setIsLoading(true)
+    trackGA(messages.length + 1, language)
+    trackAnalyticsEvent('ai_chat', { message_count: messages.length + 1, language })
 
     try {
       const response = await fetch('/api/chat', {
@@ -196,10 +200,10 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2 ${
+                      className={`max-w-[85%] rounded-2xl px-4 py-2 break-words overflow-hidden ${
                         message.role === 'user'
                           ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                          : 'bg-muted text-foreground'
                       }`}
                     >
                       {message.role === 'assistant' ? (

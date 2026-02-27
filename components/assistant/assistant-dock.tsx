@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ArrowUp, Loader2, X } from "lucide-react"
+import { ArrowUp, Loader2, X, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { MarkdownRenderer } from "@/components/docs/markdown-renderer"
 
 interface Message {
@@ -143,89 +144,87 @@ export function AssistantDock() {
     setIsExpanded(false)
   }
 
-  return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:left-64"
-      style={{
-        transform: isVisible ? "translateY(0)" : "translateY(calc(100% + 16px))",
-        transition: "transform 0.5s ease-in-out",
-      }}
-    >
-      <div className="mx-auto max-w-2xl">
-        {/* Expanded chat panel */}
-        {isExpanded && messages.length > 0 && (
-          <div className="mb-2 max-h-[50vh] overflow-y-auto rounded-2xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur-sm">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Trò chuyện với AI</span>
-              <Button variant="ghost" size="sm" onClick={clearChat} className="h-7 px-2">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2 ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    {message.role === 'assistant' ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        {message.content ? (
-                          <MarkdownRenderer content={message.content} />
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-muted-foreground">Đang suy nghĩ...</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm">{message.content}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-        )}
+  if (!isVisible) return null
 
-        {/* Input area */}
-        <div
-          role="search"
-          aria-label="Ask AI assistant"
-          className="relative rounded-2xl border border-border bg-card/95 p-1 shadow-2xl backdrop-blur-sm"
-        >
-          <div className="flex items-center gap-2">
-            <label htmlFor="assistant-input" className="sr-only">
-              Ask a question
-            </label>
-            <input
-              id="assistant-input"
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask a question..."
-              disabled={isLoading}
-              className="min-h-[44px] flex-1 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-            />
-            <div className="flex items-center gap-2 pr-2">
-              <kbd className="hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
-                ⌘I
-              </kbd>
+  return (
+    <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-4 max-w-[calc(100vw-3rem)]">
+      {isExpanded && (
+        <div className="w-[400px] max-w-full rounded-2xl border border-border bg-card shadow-xl overflow-hidden flex flex-col max-h-[600px] animate-in fade-in slide-in-from-bottom-10">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border p-4 bg-muted/30">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold">SmaxAI Assistant</h3>
+                <p className="text-xs text-muted-foreground">Hỏi tôi về tài liệu Smax...</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsExpanded(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px]">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-center p-4 text-muted-foreground">
+                <Sparkles className="h-8 w-8 mb-2 opacity-20" />
+                <p className="text-sm">Xin chào! Tôi có thể giúp gì cho bạn?</p>
+              </div>
+            )}
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={cn(
+                  "flex flex-col max-w-[85%] space-y-1",
+                  msg.role === 'user' ? "ml-auto items-end" : "mr-auto items-start"
+                )}
+              >
+                <div
+                  className={cn(
+                    "rounded-2xl px-4 py-2 text-sm",
+                    msg.role === 'user'
+                      ? "bg-primary text-primary-foreground rounded-tr-none"
+                      : "bg-muted rounded-tl-none"
+                  )}
+                >
+                  {msg.role === 'assistant' ? (
+                    <MarkdownRenderer content={msg.content} />
+                  ) : (
+                    msg.content
+                  )}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="p-4 border-t border-border bg-background">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                sendMessage()
+              }}
+              className="relative"
+            >
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Đặt câu hỏi..."
+                className="w-full rounded-full border border-border bg-muted/50 pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                disabled={isLoading}
+              />
               <Button
+                type="submit"
                 size="icon"
-                className="h-10 w-10 min-h-[44px] min-w-[44px] rounded-lg"
                 disabled={!query.trim() || isLoading}
-                onClick={sendMessage}
-                aria-label="Send message"
+                className={cn(
+                  "absolute right-1 top-1 h-8 w-8 rounded-full transition-all",
+                  query.trim() ? "bg-primary text-primary-foreground" : "bg-transparent text-muted-foreground hover:bg-muted"
+                )}
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -233,10 +232,22 @@ export function AssistantDock() {
                   <ArrowUp className="h-4 w-4" />
                 )}
               </Button>
-            </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Floating Button */}
+      {!isExpanded && (
+        <Button
+          onClick={() => setIsExpanded(true)}
+          className="h-14 w-14 rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-all duration-300"
+          size="icon"
+        >
+          <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20" />
+          <Sparkles className="h-6 w-6 relative z-10" />
+        </Button>
+      )}
     </div>
   )
 }

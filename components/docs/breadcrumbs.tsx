@@ -15,7 +15,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
       <ol className="flex items-center gap-1 overflow-x-auto">
         <li className="flex items-center">
           <Link
-            href="/docs"
+            href="/tai-lieu/vi"
             className="flex items-center hover:text-foreground transition-colors"
             aria-label="Documentation home"
           >

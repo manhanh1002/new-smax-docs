@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 
 import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
+import { trackDocRating as trackGA } from "@/lib/google-analytics"
+import { trackDocRating as trackDB } from "@/lib/actions/admin"
 
 interface DocsRatingProps {
   slug?: string
@@ -27,6 +29,12 @@ export function DocsRating({ slug }: DocsRatingProps) {
     setState((prev) => ({ ...prev, helpful: value, step: 2 }))
     // Here we would typically send partial data or wait for step 2
     console.log("Step 1 (Helpful):", value, "for slug:", slug)
+
+    // Map rating string to numeric value for GA
+    const ratingMap = { useful: 3, normal: 2, bad: 1 }
+    const ratingValue = ratingMap[value]
+    trackGA(slug || 'unknown', ratingValue, language)
+    trackDB(slug || 'unknown', ratingValue, 'helpful')
   }
 
   const handleEasy = (value: "not_really" | "normal" | "easy") => {
@@ -34,6 +42,12 @@ export function DocsRating({ slug }: DocsRatingProps) {
     setState(finalState)
     // Here we submit the full rating
     console.log("Step 2 (Easy):", value, "Full Rating:", finalState, "for slug:", slug)
+    
+    // Map easy rating
+    const easyMap = { easy: 3, normal: 2, not_really: 1 }
+    const easyValue = easyMap[value]
+    trackDB(slug || 'unknown', easyValue, 'easy')
+    
     // TODO: Submit to Supabase
   }
 

@@ -19,7 +19,7 @@ interface TableOfContentsProps {
 export function MobileTableOfContents({ toc }: TableOfContentsProps) {
   const [open, setOpen] = useState(false)
   const { language } = useLanguage()
-  const t = dictionaries[language]
+  const t = dictionaries[language] || dictionaries['vi'] || { toc: { title: "Mục lục" } }
 
   if (!toc.length) return null
 
@@ -29,12 +29,12 @@ export function MobileTableOfContents({ toc }: TableOfContentsProps) {
         <SheetTrigger asChild>
           <Button variant="outline" size="sm" className="w-full flex items-center gap-2 justify-start text-muted-foreground">
             <List className="h-4 w-4" />
-            <span>{t.toc.title}</span>
+            <span>{t.toc?.title || "Mục lục"}</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="bottom" className="h-[60vh] sm:h-[50vh]">
           <SheetHeader className="text-left">
-            <SheetTitle>{t.toc.title}</SheetTitle>
+            <SheetTitle>{t.toc?.title || "Mục lục"}</SheetTitle>
           </SheetHeader>
           <div className="mt-4 h-full overflow-y-auto pb-8">
             <ul className="space-y-3 text-sm">
@@ -73,7 +73,7 @@ export function MobileTableOfContents({ toc }: TableOfContentsProps) {
 export function TableOfContents({ toc }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>("")
   const { language } = useLanguage()
-  const t = dictionaries[language]
+  const t = dictionaries[language] || dictionaries['vi'] || { toc: { title: "Mục lục" } }
 
   useEffect(() => {
     const observer = new IntersectionObserver(

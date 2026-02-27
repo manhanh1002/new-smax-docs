@@ -14,6 +14,8 @@ export interface DocPage {
   parent_id: string | null
   external_id: string | null
   last_updated: string | null
+  created_at: string | null
+  breadcrumbs?: { title: string; href: string }[]
 }
 
 export interface DocTreeNode {
@@ -26,9 +28,33 @@ export interface DocTreeNode {
 
 // Get collection ID based on language
 function getCollectionId(lang: 'vi' | 'en'): string {
-  return lang === 'vi' 
-    ? process.env.OUTLINE_COLLECTION_VI_ID! 
-    : process.env.OUTLINE_COLLECTION_EN_ID!
+  const id = lang === 'vi' 
+    ? process.env.OUTLINE_COLLECTION_VI_ID 
+    : process.env.OUTLINE_COLLECTION_EN_ID
+  // Trim whitespace/newlines from env var
+  return (id || '').trim()
+}
+
+// Helper to get breadcrumbs for a doc
+async function getBreadcrumbs(doc: OutlineDocument, allDocs: OutlineDocument[], lang: string): Promise<{ title: string; href: string }[]> {
+  const breadcrumbs: { title: string; href: string }[] = []
+  
+  let current = doc
+  while (current.parentDocumentId) {
+    const parent = allDocs.find(d => d.id === current.parentDocumentId)
+    if (parent) {
+      const parentPage = mapOutlineToDocPage(parent, lang)
+      breadcrumbs.unshift({
+        title: parentPage.title,
+        href: `/tai-lieu/${lang}/${parentPage.slug}`
+      })
+      current = parent
+    } else {
+      break
+    }
+  }
+  
+  return breadcrumbs
 }
 
 // Get a single document by slug from Outline
@@ -41,7 +67,12 @@ export async function getDocPage(slug: string, lang: "vi" | "en" = "vi"): Promis
     // Strip language prefix if present (e.g., "vi/quickstart" -> "quickstart")
     normalizedSlug = normalizedSlug.replace(/^(vi|en)\//, '')
     
-    // Get all documents and find by slug
+    // If slug contains slashes (nested path), take the last part
+    // This is a simplification. Ideally we should match the full path.
+    // But Outline doesn't enforce unique slugs across hierarchy, so last part is usually unique enough or we rely on ID.
+    const lastSlugPart = normalizedSlug.split('/').pop() || normalizedSlug
+    
+    // Get all documents
     const documents = await getOutlineDocuments(collectionId)
     
     // Find document by matching slug (with stripped ID) or by Outline ID
@@ -60,24 +91,43 @@ export async function getDocPage(slug: string, lang: "vi" | "en" = "vi"): Promis
       // Extract ID from url if present
       const idMatch = d.url ? d.url.match(/-([a-zA-Z0-9]{8,12})$/) : null
       const outlineId = idMatch ? idMatch[1] : null
+
+      // Also support matching by the "cleaned" slug if lastSlugPart is the cleaned version
+      // but the doc in Outline still has the numbering
+      const rawUrlPart = d.url ? d.url.split('/').pop() || '' : ''
+      const docSlugCleaned = stripOutlineId(rawUrlPart)
       
-      // Match by:
-      // 1. Stripped slug from url (e.g., "1-cong-dong-ho-tro")
-      // 2. urlId for backward compat (e.g., "oocCnuJP1G")
-      // 3. Just the ID part extracted from url
-      // 4. Generated slug from title
-      
-      return docSlug === normalizedSlug || 
-        urlId === normalizedSlug ||
-        outlineId === normalizedSlug ||
-        generateSlug(d.title) === normalizedSlug
+      return docSlug === lastSlugPart || 
+        rawUrlPart === lastSlugPart ||
+        docSlugCleaned === lastSlugPart ||
+        urlId === lastSlugPart ||
+        outlineId === lastSlugPart ||
+        generateSlug(d.title) === lastSlugPart
     })
-    
-    if (!doc) {
-      return null
+
+    if (!doc) return null
+
+    // Fetch full document details (including text content) from Outline API
+    // The list API often omits full text content
+    let docData = doc
+    try {
+      const fullDoc = await getOutlineDocument(doc.id)
+      if (fullDoc) {
+        docData = fullDoc
+      } else {
+        console.error(`Failed to fetch full document content for ${doc.id}`)
+      }
+    } catch (e) {
+      console.error(`Error fetching full document for ${doc.id}:`, e)
     }
+
+    // Map to DocPage
+    const docPage = mapOutlineToDocPage(docData, lang)
     
-    return mapOutlineToDocPage(doc, lang)
+    // Add breadcrumbs
+    docPage.breadcrumbs = await getBreadcrumbs(doc, documents, lang)
+    
+    return docPage
   } catch (error) {
     console.error('Error fetching doc page from Outline:', error)
     return null
@@ -128,6 +178,55 @@ export async function getDocTree(lang: "vi" | "en" = "vi"): Promise<DocTreeNode[
       rootNodes.push(node)
     }
   }
+
+  // Helper function for natural sort
+  const naturalSort = (a: DocTreeNode, b: DocTreeNode) => {
+    // Extract leading numbers from titles (e.g., "1. Intro", "1.10. Advanced")
+    const getParts = (s: string) => {
+      // Match number sequence at start (e.g., "1.10.2")
+      const match = s.match(/^(\d+(\.\d+)*)/)
+      if (!match) return null
+      // Split by dot and convert to numbers
+      return match[0].split('.').map(Number)
+    }
+
+    const partsA = getParts(a.title)
+    const partsB = getParts(b.title)
+
+    // If both have numbering
+    if (partsA && partsB) {
+      const len = Math.max(partsA.length, partsB.length)
+      for (let i = 0; i < len; i++) {
+        const valA = partsA[i] ?? 0
+        const valB = partsB[i] ?? 0
+        if (valA !== valB) {
+          return valA - valB
+        }
+      }
+      // If numbers are identical, fall back to title length (shorter is usually parent/main)
+      // or alphabetical
+      return a.title.localeCompare(b.title)
+    }
+    
+    // If only one has number, prioritize numbered item
+    if (partsA && !partsB) return -1
+    if (!partsA && partsB) return 1
+
+    // Fallback to alphabetical sort
+    return a.title.localeCompare(b.title)
+  }
+
+  // Sort root nodes and children recursively
+  const sortTree = (nodes: DocTreeNode[]) => {
+    nodes.sort(naturalSort)
+    nodes.forEach(node => {
+      if (node.children && node.children.length > 0) {
+        sortTree(node.children)
+      }
+    })
+  }
+
+  sortTree(rootNodes)
   
   return rootNodes
 }
@@ -156,7 +255,7 @@ function stripOutlineId(urlId: string): string {
   // Match and remove the ID suffix
   const match = clean.match(/^(.+)-([a-zA-Z0-9]{8,12})$/)
   if (match) {
-    return match[1] // Return just the name part
+    return match[1] // Return just the name part (keep numbering if present)
   }
   
   return clean
@@ -191,6 +290,7 @@ function mapOutlineToDocPage(doc: OutlineDocument, lang: string): DocPage {
     parent_id: doc.parentDocumentId,
     external_id: doc.id,
     last_updated: doc.updatedAt,
+    created_at: doc.createdAt || null,
   }
 }
 

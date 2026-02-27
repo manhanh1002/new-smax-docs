@@ -3,6 +3,17 @@
 // and connecting to Outline API
 
 import crypto from 'crypto'
+import * as dotenv from 'dotenv'
+import path from 'path'
+
+// Try to load environment variables if they are missing (e.g. running scripts)
+if (!process.env.OUTLINE_API_KEY) {
+  try {
+    dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
+  } catch (e) {
+    // Ignore error if .env.local doesn't exist or dotenv is not available
+  }
+}
 
 // Outline API Client
 const OUTLINE_URL = process.env.OUTLINE_URL || 'https://docs.cdp.vn'
@@ -44,11 +55,21 @@ async function outlineApiRequest<T>(
   endpoint: string,
   body: Record<string, unknown> = {}
 ): Promise<OutlineApiResponse<T>> {
+  if (!OUTLINE_API_KEY) {
+    throw new Error('Missing OUTLINE_API_KEY')
+  }
+
+  // Ensure Bearer prefix is present
+  const apiKey = OUTLINE_API_KEY.startsWith('Bearer ') 
+    ? OUTLINE_API_KEY 
+    : `Bearer ${OUTLINE_API_KEY}`
+
   const response = await fetch(`${OUTLINE_URL}/api/${endpoint}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OUTLINE_API_KEY}`,
+      'Authorization': apiKey,
+      'Accept': 'application/json',
     },
     body: JSON.stringify(body),
   })
@@ -110,18 +131,44 @@ export async function getOutlineDocuments(
   collectionId?: string,
   options: { limit?: number; offset?: number } = {}
 ): Promise<OutlineDocument[]> {
-  const body: Record<string, unknown> = {
-    limit: options.limit || 100,
-    offset: options.offset || 0,
-  }
+  const allDocs: OutlineDocument[] = []
+  let offset = options.offset || 0
+  const limit = options.limit || 100
+  
+  while (true) {
+    const body: Record<string, unknown> = {
+      limit,
+      offset,
+    }
 
-  if (collectionId) {
-    body.collectionId = collectionId
-  }
+    if (collectionId) {
+      body.collectionId = collectionId
+    }
 
-  const response = await outlineApiRequest<OutlineDocument[]>('documents.list', body)
-  // Outline returns data as array directly, not nested in documents
-  return response.data || []
+    const response = await outlineApiRequest<OutlineDocument[]>('documents.list', body)
+    const docs = response.data || []
+    
+    if (docs.length === 0) break
+    
+    allDocs.push(...docs)
+    
+    // If we received fewer docs than limit, we've reached the end
+    if (docs.length < limit) break
+    
+    // If user specified a limit and we reached it, stop
+    if (options.limit && allDocs.length >= options.limit) break
+    
+    // Prepare for next page
+    offset += limit
+    
+    // Safety break to prevent infinite loops in case of API issues
+    if (offset > 10000) {
+      console.warn('Reached 10000 docs limit, stopping pagination')
+      break
+    }
+  }
+  
+  return allDocs
 }
 
 // Get a single document by ID

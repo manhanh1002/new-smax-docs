@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from "@/components/theme-provider"
 import { DocsShell } from "@/components/layout/docs-shell"
 import "./globals.css"
@@ -63,6 +64,7 @@ export default function RootLayout({
           <DocsShell>{children}</DocsShell>
         </ThemeProvider>
         <Analytics />
+        <GoogleAnalytics gaId="G-SPKFF4103Z" />
       </body>
     </html>
   )

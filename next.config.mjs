@@ -3,6 +3,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  output: "standalone",
   images: {
     unoptimized: true,
   },
@@ -12,7 +13,20 @@ const nextConfig = {
       {
         source: '/',
         destination: '/tai-lieu/vi',
-        permanent: true,
+        permanent: false,
+      },
+      {
+        source: '/docs',
+        destination: '/tai-lieu/vi',
+        permanent: false,
+      },
+    ]
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/proxy/token-ai/:path*',
+        destination: 'https://token.ai.vn/v1/:path*',
       },
     ]
   },

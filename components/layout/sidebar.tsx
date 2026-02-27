@@ -117,9 +117,7 @@ function SidebarItem({ item, level = 0, lang }: { item: NavItem; level?: number;
             <button
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:text-primary",
-                isActive || isChildActive ? "font-medium text-foreground" : "text-muted-foreground",
-                // Indent based on level
-                level > 0 && "pl-4"
+                isActive || isChildActive ? "font-medium text-foreground" : "text-muted-foreground"
               )}
             >
               {Icon && <Icon className="h-4 w-4" />}

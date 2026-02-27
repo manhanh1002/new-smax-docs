@@ -36,6 +36,9 @@ function DocsShellContent({ children }: DocsShellProps) {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
+  // Check if we are in admin section
+  const isAdmin = pathname?.startsWith('/tai-lieu/admin')
+
   // Find current section and page for breadcrumbs
   const currentNav = navigation.find((section) => section.items.some((item) => item.href === pathname))
   const currentPage = currentNav?.items.find((item) => item.href === pathname)
@@ -46,14 +49,20 @@ function DocsShellContent({ children }: DocsShellProps) {
         e.preventDefault()
         setSearchOpen(true)
       }
-      if (e.key === "i" && (e.metaKey || e.ctrlKey)) {
+      if (e.key === "i" && (e.metaKey || e.ctrlKey) && !isAdmin) {
         e.preventDefault()
         setAssistantOpen(true)
       }
     }
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [])
+  }, [isAdmin])
+
+  // If admin, render simpler shell or just children (since admin has its own layout)
+  // But RootLayout wraps everything in DocsShell, so we need to conditionally render
+  if (isAdmin) {
+    return <>{children}</>
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

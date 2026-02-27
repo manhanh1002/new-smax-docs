@@ -11,6 +11,8 @@ import { DocsRating } from "@/components/docs/docs-rating"
 import { DocsShare } from "@/components/docs/docs-share"
 import { MarkdownRenderer } from "@/components/docs/markdown-renderer"
 import { extractTOC, calculateReadingTime } from "@/lib/docs/utils"
+import { useEffect } from "react"
+import { trackAnalyticsEvent } from "@/lib/actions/admin"
 
 import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
@@ -24,15 +26,21 @@ interface DocContentProps {
     prev: { title: string; href: string } | null
     next: { title: string; href: string } | null
   }
+  breadcrumbs?: { title: string; href: string }[]
 }
 
-export function DocContent({ title, content, slug, lastUpdated, pager }: DocContentProps) {
+export function DocContent({ title, content, slug, lastUpdated, pager, breadcrumbs }: DocContentProps) {
   const { copied, copy } = useCopyToClipboard()
   const { language } = useLanguage()
-  const t = dictionaries[language]
+  
+  // Safe access to dictionary
+  const t = dictionaries[language] || dictionaries['vi'] || {
+    content: { copied: "Đã sao chép", copyPage: "Sao chép trang" },
+    toc: { title: "Mục lục" }
+  }
   
   // Calculate reading time
-  const readingTime = calculateReadingTime(content)
+  const readingTime = calculateReadingTime(content || '')
   
   // Format date
   const formatDate = (dateString: string) => {
@@ -49,14 +57,30 @@ export function DocContent({ title, content, slug, lastUpdated, pager }: DocCont
   }
   
   // Extract TOC
-  const toc = extractTOC(content)
+  const toc = extractTOC(content || '')
+
+  // Track view event
+  useEffect(() => {
+    // Only track if slug exists (not preview or error page)
+    if (slug) {
+      // Use a small delay to avoid tracking instant bounces or rapid navigation
+      const timer = setTimeout(() => {
+        trackAnalyticsEvent('view_doc', { title, slug, language })
+      }, 2000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [slug, title, language])
 
   const copyPage = () => {
     const fullContent = `# ${title}\n\n${content}`
     copy(fullContent)
   }
 
-  const breadcrumbItems = slug ? [{ label: title }] : []
+  const breadcrumbItems = [
+    ...(breadcrumbs?.map(b => ({ label: b.title, href: b.href })) || []),
+    ...(slug ? [{ label: title }] : [])
+  ]
 
   return (
     <div className="flex flex-col xl:flex-row min-h-full">

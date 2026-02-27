@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils"
 
 import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
+import { trackDocShare as trackGA } from "@/lib/google-analytics"
+import { trackAnalyticsEvent } from "@/lib/actions/admin"
 
 interface DocsShareProps {
   title: string
@@ -27,6 +29,8 @@ export function DocsShare({ title, slug, className }: DocsShareProps) {
 
   const handleCopyLink = () => {
     copy(url)
+    trackGA(title, 'copy_link', language)
+    trackAnalyticsEvent('copy_page', { title, url, language })
   }
 
   const handleFacebookShare = () => {
@@ -35,10 +39,14 @@ export function DocsShare({ title, slug, className }: DocsShareProps) {
       "_blank",
       "width=600,height=400"
     )
+    trackGA(title, 'facebook', language)
+    trackAnalyticsEvent('share_page', { title, url, platform: 'facebook', language })
   }
 
   const handleEmailShare = () => {
     window.location.href = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`
+    trackGA(title, 'email', language)
+    trackAnalyticsEvent('share_page', { title, url, platform: 'email', language })
   }
 
   return (

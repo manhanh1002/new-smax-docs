@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getOutlineDocuments, getLanguageFromCollection, type OutlineDocument } from '@/lib/outline'
 
+import { processDocumentForRAG } from '@/lib/embeddings'
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -18,7 +20,11 @@ export async function POST(request: NextRequest) {
       return await generateEmbeddings()
     }
 
-    return NextResponse.json({ error: 'Invalid action. Use: sync-documents or generate-embeddings' }, { status: 400 })
+    if (action === 'force-chunking') {
+      return await forceChunking()
+    }
+
+    return NextResponse.json({ error: 'Invalid action. Use: sync-documents, generate-embeddings, or force-chunking' }, { status: 400 })
   } catch (error) {
     console.error('Admin sync error:', error)
     return NextResponse.json({
@@ -183,6 +189,60 @@ async function generateEmbeddings() {
     total: docsWithoutEmbeddings.length,
     successCount: successCount,
     failedCount: docsWithoutEmbeddings.length - successCount,
+    results
+  })
+}
+
+async function forceChunking() {
+  console.log('[Chunking] Starting forced chunking...')
+  
+  // Get all documents
+  const { data: docs, error } = await supabaseAdmin
+    .from('documents')
+    .select('id, title, content')
+  
+  if (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+
+  if (!docs || docs.length === 0) {
+    return NextResponse.json({ success: true, message: 'No documents found' })
+  }
+
+  console.log(`[Chunking] Processing ${docs.length} documents`)
+  
+  const results: { id: string; title: string; status: string }[] = []
+  
+  // Process sequentially to avoid rate limits
+  for (const doc of docs) {
+    try {
+      if (!doc.content) {
+        results.push({ id: doc.id, title: doc.title, status: 'skipped (no content)' })
+        continue
+      }
+      
+      console.log(`[Chunking] Processing: ${doc.title}`)
+      await processDocumentForRAG(doc.id, doc.content)
+      results.push({ id: doc.id, title: doc.title, status: 'success' })
+      
+      // Small delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error'
+      results.push({ id: doc.id, title: doc.title, status: `failed: ${errorMsg}` })
+      console.error(`[Chunking] ✗ ${doc.title}:`, errorMsg)
+    }
+  }
+
+  const successCount = results.filter(r => r.status === 'success').length
+
+  return NextResponse.json({
+    success: true,
+    message: `Processed ${successCount}/${docs.length} documents`,
+    total: docs.length,
+    successCount,
+    failedCount: docs.length - successCount,
     results
   })
 }

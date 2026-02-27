@@ -59,10 +59,22 @@ const calloutConfig = {
 
 function parseMarkdown(content: string): Token[] {
   const tokens: Token[] = []
+  if (!content) return tokens
+  
   const lines = content.split('\n')
   let i = 0
+  
+  // Safety counter to prevent infinite loops
+  let loopCount = 0
+  const MAX_LOOPS = lines.length * 10 // Generous limit
 
   while (i < lines.length) {
+    loopCount++
+    if (loopCount > MAX_LOOPS) {
+        console.error("Markdown parser detected infinite loop, aborting.")
+        break
+    }
+    
     const line = lines[i]
 
     // Empty line
@@ -279,7 +291,7 @@ function renderInline(text: string): React.ReactNode {
           href={linkMatch[2]} 
           target={isExternal ? "_blank" : undefined}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          className="text-primary underline underline-offset-4 hover:text-primary/80"
+          className="text-primary underline underline-offset-4 hover:text-primary/80 break-all"
         >
           {linkMatch[1]}
         </a>
@@ -314,11 +326,16 @@ function renderImage(src: string, alt: string, key: number): React.ReactNode {
   let imageSrc = src
   
   // Handle Outline attachment URLs - use our proxy
-  const attachmentMatch = src.match(/attachments\.redirect\?id=([a-f0-9-]+)/i)
+  // Use a more permissive regex to catch all alphanumeric IDs (base58/base62/uuid)
+  const attachmentMatch = src.match(/attachments\.redirect\?id=([a-zA-Z0-9-]+)/)
   if (attachmentMatch) {
     imageSrc = `/api/outline/image?id=${attachmentMatch[1]}`
   } else if (src.startsWith("/") && !src.startsWith("//")) {
-    imageSrc = `https://docs.cdp.vn${src}`
+    // If it's a relative URL, it might be an internal Outline image (not attachment)
+    // Or it might be a local image in our public folder (unlikely for Outline docs)
+    // Try to proxy it or use the configured Outline URL
+    const outlineUrl = process.env.NEXT_PUBLIC_OUTLINE_URL || "https://docs.cdp.vn"
+    imageSrc = `${outlineUrl}${src}`
   }
 
   return (
@@ -425,7 +442,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
         return <h4 key={index} className="mb-2 mt-4 text-lg font-semibold text-foreground">{renderInline(token.content || '')}</h4>
       
       case 'paragraph':
-        return <p key={index} className="mb-4 text-muted-foreground leading-7">{renderInline(token.content || '')}</p>
+        return <p key={index} className="mb-4 text-muted-foreground leading-7 break-words">{renderInline(token.content || '')}</p>
       
       case 'code-block':
         return <CodeBlock key={index} language={token.language} code={token.content || ''} />
@@ -490,7 +507,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   }
 
   return (
-    <div className={cn("markdown-content", className)}>
+    <div className={cn("markdown-content break-words overflow-hidden", className)}>
       {tokens.map((token, index) => renderToken(token, index))}
     </div>
   )

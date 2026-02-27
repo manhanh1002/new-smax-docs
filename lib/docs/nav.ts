@@ -15,10 +15,10 @@ export const siteConfig = {
 }
 
 export const topNavigation = [
-  { title: "Documentation", href: "/tai-lieu/vi" },
-  { title: "Guides", href: "/tai-lieu/vi/quickstart" },
-  { title: "API reference", href: "/tai-lieu/vi/api" },
-  { title: "Changelog", href: "/tai-lieu/vi/changelog" },
+  { title: "Trang chủ", href: "https://smax.ai/vi" },
+  { title: "Khóa học", href: "https://bot.vn" },
+  { title: "Partner APIs", href: "https://smax.ai/api/partner/docs" },
+  { title: "Cập nhật", href: "/changelog" },
 ]
 
 export const footerLinks = {
@@ -64,10 +64,10 @@ export interface NavSection {
 // This is only used as fallback when Outline is not available
 export const navigation: NavSection[] = [
   {
-    title: "Documentation",
+    title: "Trang chủ",
     icon: Rocket,
     items: [
-      { title: "Introduction", href: "/tai-lieu/vi" },
+      { title: "Introduction", href: "https://smax.ai/vi" },
     ],
   },
 ]
