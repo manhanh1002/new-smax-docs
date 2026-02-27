@@ -98,11 +98,14 @@ export async function getDocPage(slug: string, lang: "vi" | "en" = "vi"): Promis
       const docSlugCleaned = stripOutlineId(rawUrlPart)
       
       return docSlug === lastSlugPart || 
+        stripLeadingNumber(docSlug) === lastSlugPart || // Allow matching without leading number
         rawUrlPart === lastSlugPart ||
         docSlugCleaned === lastSlugPart ||
+        stripLeadingNumber(docSlugCleaned) === lastSlugPart || // Allow matching without leading number
         urlId === lastSlugPart ||
         outlineId === lastSlugPart ||
-        generateSlug(d.title) === lastSlugPart
+        generateSlug(d.title) === lastSlugPart ||
+        stripLeadingNumber(generateSlug(d.title)) === lastSlugPart // Allow matching without leading number
     })
 
     if (!doc) return null
@@ -255,10 +258,17 @@ function stripOutlineId(urlId: string): string {
   // Match and remove the ID suffix
   const match = clean.match(/^(.+)-([a-zA-Z0-9]{8,12})$/)
   if (match) {
-    return match[1] // Return just the name part (keep numbering if present)
+    clean = match[1] // Return just the name part (keep numbering if present)
   }
   
   return clean
+}
+
+// Helper to strip leading numbers from slug
+// e.g. "1-gioi-thieu" -> "gioi-thieu"
+function stripLeadingNumber(slug: string): string {
+  if (!slug) return ''
+  return slug.replace(/^\d+-/, '')
 }
 
 // Helper to map Outline document to DocPage
@@ -278,6 +288,10 @@ function mapOutlineToDocPage(doc: OutlineDocument, lang: string): DocPage {
   if (!slug) {
     slug = generateSlug(doc.title)
   }
+
+  // Strip leading number from slug to make URLs cleaner
+  // This matches the AI behavior and user request
+  slug = stripLeadingNumber(slug)
   
   return {
     id: doc.id,
