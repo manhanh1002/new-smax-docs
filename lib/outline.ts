@@ -53,7 +53,8 @@ interface OutlineCollection {
 // Generic Outline API request helper
 async function outlineApiRequest<T>(
   endpoint: string,
-  body: Record<string, unknown> = {}
+  body: Record<string, unknown> = {},
+  options: RequestInit = {}
 ): Promise<OutlineApiResponse<T>> {
   if (!OUTLINE_API_KEY) {
     throw new Error('Missing OUTLINE_API_KEY')
@@ -72,6 +73,7 @@ async function outlineApiRequest<T>(
       'Accept': 'application/json',
     },
     body: JSON.stringify(body),
+    ...options, // Merge custom options (like cache, next.revalidate)
   })
 
   const data = await response.json()
@@ -129,11 +131,14 @@ export async function getOutlineCollections(): Promise<OutlineCollection[]> {
 // Get documents from a collection
 export async function getOutlineDocuments(
   collectionId?: string,
-  options: { limit?: number; offset?: number } = {}
+  options: { limit?: number; offset?: number } & RequestInit = {}
 ): Promise<OutlineDocument[]> {
   const allDocs: OutlineDocument[] = []
   let offset = options.offset || 0
   const limit = options.limit || 100
+  
+  // Extract fetch options
+  const { limit: _l, offset: _o, ...fetchOptions } = options
   
   while (true) {
     const body: Record<string, unknown> = {
@@ -145,7 +150,7 @@ export async function getOutlineDocuments(
       body.collectionId = collectionId
     }
 
-    const response = await outlineApiRequest<OutlineDocument[]>('documents.list', body)
+    const response = await outlineApiRequest<OutlineDocument[]>('documents.list', body, fetchOptions)
     const docs = response.data || []
     
     if (docs.length === 0) break
@@ -172,11 +177,11 @@ export async function getOutlineDocuments(
 }
 
 // Get a single document by ID
-export async function getOutlineDocument(documentId: string): Promise<OutlineDocument | null> {
+export async function getOutlineDocument(documentId: string, options: RequestInit = {}): Promise<OutlineDocument | null> {
   try {
     const response = await outlineApiRequest<OutlineDocument>('documents.info', {
       id: documentId,
-    })
+    }, options)
     return response.data || null
   } catch (error) {
     console.error('Error fetching document:', error)

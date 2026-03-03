@@ -2,6 +2,7 @@
 // Webhook handler for Outline events
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { verifyOutlineSignature, getLanguageFromCollection, generateSlug, OutlineWebhookPayload } from '@/lib/outline'
 import { processDocumentForRAG } from '@/lib/embeddings'
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest) {
 
     // 4. Upsert Document Metadata
     const slug = payload.urlId || generateSlug(payload.title)
+    const docPath = `/tai-lieu/${lang}/${slug}`
+
     const { data: document, error: upsertError } = await supabaseAdmin
       .from('documents')
       .upsert({
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
         title: payload.title,
         slug: slug,
         language: lang,
-        path: `/${lang}/docs/${slug}`, // Simplified path logic
+        path: docPath, // Use correct path for frontend
         content: payload.text,
         last_updated: payload.updatedAt,
         meta: {
@@ -67,6 +70,16 @@ export async function POST(req: NextRequest) {
       console.error('Error processing RAG:', ragError)
       // We don't fail the webhook if RAG fails, but we should log it or retry
       // Return 202 Accepted maybe? But we already committed the document.
+    }
+
+    // 6. Revalidate Cache (ISR)
+    // This ensures that the updated content is visible immediately
+    try {
+        revalidatePath(docPath)
+        revalidatePath(`/tai-lieu/${lang}`) // Revalidate index page
+        console.log(`Revalidated paths: ${docPath}, /tai-lieu/${lang}`)
+    } catch (revalidateError) {
+        console.error('Error revalidating cache:', revalidateError)
     }
 
     return NextResponse.json({ message: 'Success', documentId: document.id }, { status: 200 })

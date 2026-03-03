@@ -33,7 +33,8 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
   }
 }
 
-export const dynamicParams = false // Disable dynamic params to force static generation
+export const dynamicParams = true // Enable dynamic params to render new pages on demand
+export const revalidate = 60 // Revalidate every 60 seconds (ISR)
 
 export async function generateStaticParams() {
   const langs = ["vi", "en"] as const

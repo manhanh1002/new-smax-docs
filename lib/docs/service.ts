@@ -73,7 +73,9 @@ export async function getDocPage(slug: string, lang: "vi" | "en" = "vi"): Promis
     const lastSlugPart = normalizedSlug.split('/').pop() || normalizedSlug
     
     // Get all documents
-    const documents = await getOutlineDocuments(collectionId)
+    const documents = await getOutlineDocuments(collectionId, {
+      next: { revalidate: 60 } // Cache list for 60s
+    })
     
     // Find document by matching slug (with stripped ID) or by Outline ID
     const doc = documents.find(d => {
@@ -114,7 +116,9 @@ export async function getDocPage(slug: string, lang: "vi" | "en" = "vi"): Promis
     // The list API often omits full text content
     let docData = doc
     try {
-      const fullDoc = await getOutlineDocument(doc.id)
+      const fullDoc = await getOutlineDocument(doc.id, {
+        next: { revalidate: 60 } // Cache doc content for 60s
+      })
       if (fullDoc) {
         docData = fullDoc
       } else {

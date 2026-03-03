@@ -7,6 +7,8 @@ interface DocPageProps {
   }>
 }
 
+export const revalidate = 60 // Revalidate every 60 seconds (ISR)
+
 export default async function DocsIndexPage({ params }: DocPageProps) {
   const { lang } = await params
   
