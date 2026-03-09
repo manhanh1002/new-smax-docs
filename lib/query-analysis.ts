@@ -2,18 +2,19 @@
  * Query Analysis Module for RAG Chat
  * 
  * Handles:
- * 1. Intent Classification - Detect user intent (feature_inquiry, how_to, comparison, troubleshooting)
+ * 1. Intent Classification - Detect user intent
  * 2. Query Decomposition - Split complex queries into sub-queries
  * 3. Query Expansion - Add related terms for better retrieval
+ * 4. Query Normalization - Expand Vietnamese abbreviations
  */
 
 // Intent types
 export type QueryIntent = 
-  | 'feature_inquiry'    // Hỏi về tính năng: "Zalo OA có những tính năng gì?"
-  | 'how_to'             // Hướng dẫn: "Cách cài đặt bot auto?"
-  | 'comparison'         // So sánh: "So sánh Zalo OA và Facebook Messenger"
-  | 'troubleshooting'    // Khắc phục sự cố: "Lỗi không kết nối được Telegram"
-  | 'greeting'           // Chào hỏi: "Xin chào", "Hello"
+  | 'feature_inquiry'    // Hỏi về tính năng
+  | 'how_to'             // Hướng dẫn
+  | 'comparison'         // So sánh
+  | 'troubleshooting'    // Khắc phục sự cố
+  | 'greeting'           // Chào hỏi
   | 'general'            // Câu hỏi chung
 
 export interface QueryAnalysis {
@@ -24,9 +25,87 @@ export interface QueryAnalysis {
   suggestedMatchCount: number
   suggestedThreshold: number
   originalQuery: string
+  normalizedQuery: string
 }
 
-// Keywords for intent classification
+// ============================================
+// VIETNAMESE ABBREVIATION DICTIONARY
+// ============================================
+const VIETNAMESE_ABBREVIATIONS: Record<string, string> = {
+  // Viết tắt phổ biến
+  'ko': 'không',
+  'k': 'không',
+  'kh': 'không',
+  'ntn': 'như thế nào',
+  'kq': 'kết quả',
+  'j': 'gì',
+  'cj': 'cái gì',
+  'bn': 'bao nhiêu',
+  'lm': 'làm',
+  'cx': 'cũng',
+  'dc': 'được',
+  'đc': 'được',
+  'vs': 'với',
+  'ms': 'mới',
+  'tn': 'thế nào',
+  'mk': 'mình',  // cũng có thể là mật khẩu, nhưng phổ biến là mình
+  'mjnh': 'mình',
+  'mjk': 'mình',
+  'aj': 'ai',
+  'đâj': 'đây',
+  'z': 'vậy',
+  'r': 'rồi',
+  't': 'tao',
+  'm': 'mày',
+  'b': 'bạn',
+  'a': 'anh',
+  'e': 'em',
+  'c': 'chị',
+  'ch': 'cho',
+  'h': 'giờ',
+  'hn': 'hôm nay',
+  'hnay': 'hôm nay',
+  'mai': 'ngày mai',
+  'hqua': 'hôm qua',
+  'tq': 'tổng quan',
+  'cn': 'chức năng',
+  'cg': 'có gì',
+  'kg': 'không gì',
+  'kt': 'kiểm tra',
+  'ht': 'hướng dẫn',
+  'th': 'thử',
+  'tl': 'trả lời',
+  'ns': 'nói',
+  'cb': 'chuẩn bị',
+  'sd': 'sử dụng',
+  'sđt': 'số điện thoại',
+}
+
+// ============================================
+// DOMAIN-SPECIFIC TERM MAPPINGS (SmaxAI)
+// ============================================
+const DOMAIN_TERM_MAPPINGS: Record<string, string[]> = {
+  'ai': ['GenAI', 'trí tuệ nhân tạo', 'artificial intelligence'],
+  'bot': ['bot auto', 'chatbot', 'automation', 'tự động'],
+  'oa': ['Official Account', 'Zalo OA'],
+  'zalo': ['Zalo OA', 'Zalo Official Account'],
+  'fb': ['Facebook', 'Facebook Messenger'],
+  'tele': ['Telegram'],
+  'messenger': ['Facebook Messenger', 'Meta Messenger'],
+  'smax': ['SmaxAI', 'Smax'],
+  'livechat': ['Live Chat', 'trò chuyện trực tuyến'],
+  'api': ['API', 'giao diện lập trình'],
+  'webhook': ['Webhook', 'kết nối API'],
+  'broadcast': ['Broadcast', 'gửi tin nhắn hàng loạt'],
+  'segment': ['Segment', 'phân nhóm khách hàng'],
+  'trigger': ['Trigger', 'kích hoạt tự động'],
+  'template': ['Template', 'mẫu tin nhắn'],
+  'dashboard': ['Dashboard', 'bảng điều khiển'],
+}
+
+// ============================================
+// KEYWORDS FOR INTENT CLASSIFICATION
+// ============================================
 const INTENT_KEYWORDS: Record<QueryIntent, string[]> = {
   feature_inquiry: [
     'tính năng', 'chức năng', 'có gì', 'làm được gì', 'hỗ trợ gì',
@@ -50,7 +129,7 @@ const INTENT_KEYWORDS: Record<QueryIntent, string[]> = {
   general: []
 }
 
-// Channel/feature keywords for query expansion
+// Channel/feature keywords
 const CHANNEL_KEYWORDS = [
   'zalo', 'facebook', 'messenger', 'telegram', 'instagram', 'tiktok', 
   'whatsapp', 'livechat', 'website', 'api'
@@ -60,6 +139,57 @@ const FEATURE_KEYWORDS = [
   'bot auto', 'broadcast', 'trigger', 'segment', 'khách hàng', 'dashboard',
   'thống kê', 'tin nhắn', 'template', 'webhook', 'integration'
 ]
+
+// ============================================
+// QUERY NORMALIZATION FUNCTION
+// ============================================
+
+/**
+ * Normalize query by expanding abbreviations and domain terms
+ */
+export function normalizeQuery(query: string): string {
+  let normalized = query.toLowerCase()
+  
+  // 1. Expand Vietnamese abbreviations (word boundary matching)
+  for (const [abbr, full] of Object.entries(VIETNAMESE_ABBREVIATIONS)) {
+    // Match word boundaries to avoid replacing parts of words
+    const regex = new RegExp(`\\b${abbr}\\b`, 'gi')
+    normalized = normalized.replace(regex, full)
+  }
+  
+  // 2. Expand domain-specific terms
+  const expandedTerms: string[] = []
+  for (const [term, expansions] of Object.entries(DOMAIN_TERM_MAPPINGS)) {
+    if (normalized.includes(term)) {
+      expandedTerms.push(...expansions)
+    }
+  }
+  
+  // Add expanded terms to query for better embedding matching
+  if (expandedTerms.length > 0) {
+    normalized = normalized + ' ' + [...new Set(expandedTerms)].join(' ')
+  }
+  
+  return normalized
+}
+
+/**
+ * Get original normalized query (without domain expansions, just abbreviation expansion)
+ */
+export function getDisplayNormalizedQuery(query: string): string {
+  let normalized = query.toLowerCase()
+  
+  for (const [abbr, full] of Object.entries(VIETNAMESE_ABBREVIATIONS)) {
+    const regex = new RegExp(`\\b${abbr}\\b`, 'gi')
+    normalized = normalized.replace(regex, full)
+  }
+  
+  return normalized
+}
+
+// ============================================
+// INTENT CLASSIFICATION
+// ============================================
 
 /**
  * Classify the intent of a user query
@@ -96,7 +226,7 @@ export function isComplexQuery(query: string): boolean {
   
   let score = 0
   
-  // Check for multiple topic indicators
+  // Check for connectors
   const connectors = [' và ', ' với ', ' hoặc ', ' cũng như ', ' và cả ', ' ngoài ra ', ' thêm ', ' cùng ']
   for (const connector of connectors) {
     if (lowerQuery.includes(connector)) {
@@ -104,14 +234,14 @@ export function isComplexQuery(query: string): boolean {
     }
   }
   
-  // Check for multiple channel mentions (strong indicator)
+  // Check for multiple channel mentions
   let channelCount = 0
   for (const channel of CHANNEL_KEYWORDS) {
     if (lowerQuery.includes(channel)) {
       channelCount++
     }
   }
-  if (channelCount >= 2) score += 2  // Increased weight
+  if (channelCount >= 2) score += 2
   
   // Check for multiple feature mentions
   let featureCount = 0
@@ -127,7 +257,7 @@ export function isComplexQuery(query: string): boolean {
     score += 1
   }
   
-  // Check for multiple action verbs (cách, hướng dẫn, thiết lập, kết nối...)
+  // Check for multiple action verbs
   const actionVerbs = ['cách', 'hướng dẫn', 'thiết lập', 'kết nối', 'cài đặt']
   let actionCount = 0
   for (const verb of actionVerbs) {
@@ -135,7 +265,6 @@ export function isComplexQuery(query: string): boolean {
       actionCount++
     }
   }
-  // If has action verb + connector + another topic, it's complex
   if (actionCount >= 1 && score >= 1) {
     score += 1
   }
@@ -150,26 +279,20 @@ export function decomposeQuery(query: string): string[] {
   const subQueries: string[] = []
   const lowerQuery = query.toLowerCase()
   
-  // Pattern 1: "A và B" or "A, B và C"
-  const andPattern = /(.+?)\s+(?:và|,|với)\s+(.+)/gi
-  
-  // Pattern 2: Comparison "So sánh A và B"
+  // Pattern: Comparison
   if (lowerQuery.includes('so sánh') || lowerQuery.includes('khác nhau')) {
-    // Extract entities being compared
     for (const channel of CHANNEL_KEYWORDS) {
       if (lowerQuery.includes(channel)) {
         subQueries.push(channel)
       }
     }
-    // Add comparison intent query
     if (subQueries.length >= 2) {
       subQueries.push(`so sánh ${subQueries.join(' và ')}`)
     }
   }
   
-  // Pattern 3: "Cách X và Y"
+  // Pattern: "Cách X và Y"
   if (lowerQuery.includes('cách') || lowerQuery.includes('hướng dẫn')) {
-    // Split by "và" if present
     const parts = query.split(/\s+và\s+/i)
     if (parts.length > 1) {
       for (const part of parts) {
@@ -178,24 +301,21 @@ export function decomposeQuery(query: string): string[] {
     }
   }
   
-  // Pattern 4: Extract specific topics
+  // Extract topics
   const topics = extractTopics(query)
   if (topics.length > 1) {
-    // Add topic-specific queries
     for (const topic of topics) {
       subQueries.push(topic)
     }
   }
   
-  // Dedupe and filter
   const uniqueQueries = [...new Set(subQueries)].filter(q => q.length > 3)
   
-  // Always include original query as fallback
   if (uniqueQueries.length === 0) {
     return [query]
   }
   
-  return uniqueQueries.length > 0 ? uniqueQueries : [query]
+  return uniqueQueries
 }
 
 /**
@@ -205,14 +325,12 @@ function extractTopics(query: string): string[] {
   const topics: string[] = []
   const lowerQuery = query.toLowerCase()
   
-  // Check for channel mentions
   for (const channel of CHANNEL_KEYWORDS) {
     if (lowerQuery.includes(channel)) {
       topics.push(channel)
     }
   }
   
-  // Check for feature mentions
   for (const feature of FEATURE_KEYWORDS) {
     if (lowerQuery.includes(feature)) {
       topics.push(feature)
@@ -229,7 +347,6 @@ export function expandQuery(query: string): string[] {
   const expandedTerms: string[] = []
   const lowerQuery = query.toLowerCase()
   
-  // Add synonyms and related terms
   const synonyms: Record<string, string[]> = {
     'kết nối': ['tích hợp', 'cài đặt', 'setup', 'connect'],
     'tin nhắn': ['message', 'messenger', 'chat'],
@@ -256,50 +373,42 @@ export function getSearchParams(intent: QueryIntent, isComplex: boolean): {
 } {
   switch (intent) {
     case 'comparison':
-      return {
-        matchCount: isComplex ? 10 : 8,  // Need more docs for comparison
-        threshold: 0.25  // Lower threshold to get more diverse results
-      }
+      return { matchCount: isComplex ? 10 : 8, threshold: 0.25 }
     case 'how_to':
-      return {
-        matchCount: 6,
-        threshold: 0.3
-      }
+      return { matchCount: 6, threshold: 0.3 }
     case 'troubleshooting':
-      return {
-        matchCount: 5,
-        threshold: 0.35  // Higher threshold for specific issues
-      }
+      return { matchCount: 5, threshold: 0.35 }
     case 'feature_inquiry':
-      return {
-        matchCount: isComplex ? 8 : 5,
-        threshold: 0.28
-      }
+      return { matchCount: isComplex ? 8 : 5, threshold: 0.28 }
     default:
-      return {
-        matchCount: 5,
-        threshold: 0.3
-      }
+      return { matchCount: 5, threshold: 0.3 }
   }
 }
+
+// ============================================
+// MAIN ANALYZE FUNCTION
+// ============================================
 
 /**
  * Main function: Analyze query and return structured analysis
  */
 export function analyzeQuery(query: string): QueryAnalysis {
-  // 1. Classify intent
+  // 1. Normalize query (expand abbreviations)
+  const normalizedQuery = normalizeQuery(query)
+  
+  // 2. Classify intent
   const intent = classifyIntent(query)
   
-  // 2. Check complexity
+  // 3. Check complexity
   const complex = isComplexQuery(query)
   
-  // 3. Decompose if complex
+  // 4. Decompose if complex
   const subQueries = complex ? decomposeQuery(query) : [query]
   
-  // 4. Expand query terms
+  // 5. Expand query terms
   const expandedTerms = expandQuery(query)
   
-  // 5. Get suggested parameters
+  // 6. Get suggested parameters
   const { matchCount, threshold } = getSearchParams(intent, complex)
   
   return {
@@ -309,7 +418,8 @@ export function analyzeQuery(query: string): QueryAnalysis {
     isComplex: complex,
     suggestedMatchCount: matchCount,
     suggestedThreshold: threshold,
-    originalQuery: query
+    originalQuery: query,
+    normalizedQuery
   }
 }
 

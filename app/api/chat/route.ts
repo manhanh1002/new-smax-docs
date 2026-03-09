@@ -361,15 +361,21 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Chat] Query: ${query}, Lang: ${lang}`)
 
-    // ========== IMPROVED: Query Analysis ==========
+    // ========== IMPROVED: Query Analysis with Normalization ==========
     const analysis = analyzeQuery(query)
     console.log(`[Chat] Analysis:`, {
       intent: analysis.intent,
       isComplex: analysis.isComplex,
+      originalQuery: analysis.originalQuery,
+      normalizedQuery: analysis.normalizedQuery,
       subQueries: analysis.subQueries,
       suggestedMatchCount: analysis.suggestedMatchCount,
       suggestedThreshold: analysis.suggestedThreshold
     })
+    
+    // Use normalized query for embedding generation (expands abbreviations)
+    const queryForEmbedding = analysis.normalizedQuery
+    console.log(`[Chat] Using normalized query for embedding: "${queryForEmbedding}"`)
 
     // Handle greeting intent specially
     if (analysis.intent === 'greeting') {
@@ -388,15 +394,20 @@ export async function POST(request: NextRequest) {
     
     if (analysis.isComplex && analysis.subQueries.length > 1) {
       // Use multi-query search for complex queries
+      // Normalize each sub-query
+      const normalizedSubQueries = analysis.subQueries.map(sq => {
+        const subAnalysis = analyzeQuery(sq)
+        return subAnalysis.normalizedQuery
+      })
       searchResults = await multiQuerySearch(
-        analysis.subQueries,
+        normalizedSubQueries,
         lang,
         analysis.suggestedThreshold,
         analysis.suggestedMatchCount
       )
     } else {
-      // Single query search
-      const queryEmbedding = await generateEmbedding(query)
+      // Single query search - use normalized query for better matching
+      const queryEmbedding = await generateEmbedding(queryForEmbedding)
       searchResults = await searchRelevantDocuments(
         queryEmbedding,
         lang,

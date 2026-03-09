@@ -25,7 +25,11 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
   const [query, setQuery] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const messageIdCounter = useRef(0)
+
+  // Generate unique message ID using timestamp + random
+  const generateMessageId = () => {
+    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  }
 
   // Use the chat history hook for localStorage persistence
   const { 
@@ -57,13 +61,13 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
     if (!query.trim() || isLoading) return
 
     const userMessage = addMessage({
-      id: `msg-${++messageIdCounter.current}`,
+      id: generateMessageId(),
       role: 'user',
       content: query.trim()
     })
 
     const assistantMessage = addMessage({
-      id: `msg-${++messageIdCounter.current}`,
+      id: generateMessageId(),
       role: 'assistant',
       content: '',
     })
