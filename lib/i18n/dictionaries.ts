@@ -48,6 +48,8 @@ export const dictionaries = {
       askAnything: "Hỏi bất kỳ điều gì về tài liệu",
       description: "Nhận câu trả lời ngay lập tức, ví dụ mã và hướng dẫn từ trợ lý AI.",
       placeholder: "Đặt câu hỏi...",
+      clearConfirm: "Bạn có chắc muốn xóa toàn bộ lịch sử chat?",
+      clearHistory: "Xóa lịch sử chat",
     },
   },
   en: {
@@ -99,6 +101,8 @@ export const dictionaries = {
       askAnything: "Ask anything about the docs",
       description: "Get instant answers, code examples, and guidance from the AI assistant.",
       placeholder: "Ask a question...",
+      clearConfirm: "Are you sure you want to clear all chat history?",
+      clearHistory: "Clear chat history",
     },
   },
 }

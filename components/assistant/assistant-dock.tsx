@@ -1,27 +1,39 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ArrowUp, Loader2, X, Sparkles } from "lucide-react"
+import { ArrowUp, Loader2, X, Sparkles, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { MarkdownRenderer } from "@/components/docs/markdown-renderer"
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  isStreaming?: boolean
-}
+import { useChatHistory } from "@/hooks/use-chat-history"
 
 export function AssistantDock() {
   const [query, setQuery] = useState("")
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
-  const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messageIdCounter = useRef(0)
+
+  // Use the chat history hook for localStorage persistence
+  const { 
+    messages, 
+    addMessage, 
+    updateMessage, 
+    clearMessages, 
+    getHistoryForAPI,
+    addWelcomeMessage,
+    isLoaded,
+    isNewUser
+  } = useChatHistory()
+
+  // Show welcome message when opening chat for the first time
+  useEffect(() => {
+    if (isLoaded && isExpanded && isNewUser) {
+      addWelcomeMessage()
+    }
+  }, [isLoaded, isExpanded, isNewUser, addWelcomeMessage])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -50,20 +62,18 @@ export function AssistantDock() {
   const sendMessage = async () => {
     if (!query.trim() || isLoading) return
 
-    const userMessage: Message = {
+    const userMessage = addMessage({
       id: `msg-${++messageIdCounter.current}`,
       role: 'user',
       content: query.trim()
-    }
+    })
 
-    const assistantMessage: Message = {
+    const assistantMessage = addMessage({
       id: `msg-${++messageIdCounter.current}`,
       role: 'assistant',
       content: '',
-      isStreaming: true
-    }
+    })
 
-    setMessages(prev => [...prev, userMessage, assistantMessage])
     setQuery("")
     setIsLoading(true)
     setIsExpanded(true)
@@ -75,10 +85,7 @@ export function AssistantDock() {
         body: JSON.stringify({
           query: userMessage.content,
           lang: 'vi',
-          history: messages.slice(-6).map(m => ({
-            role: m.role,
-            content: m.content
-          }))
+          history: getHistoryForAPI(6)
         })
       })
 
@@ -106,27 +113,14 @@ export function AssistantDock() {
         fullContent += chunk
 
         // Update the assistant message
-        setMessages(prev => prev.map(m => 
-          m.id === assistantMessage.id 
-            ? { ...m, content: fullContent }
-            : m
-        ))
+        updateMessage(assistantMessage.id, { content: fullContent })
       }
-
-      // Mark streaming as complete
-      setMessages(prev => prev.map(m => 
-        m.id === assistantMessage.id 
-          ? { ...m, isStreaming: false }
-          : m
-      ))
 
     } catch (error) {
       console.error('Chat error:', error)
-      setMessages(prev => prev.map(m => 
-        m.id === assistantMessage.id 
-          ? { ...m, content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.', isStreaming: false }
-          : m
-      ))
+      updateMessage(assistantMessage.id, { 
+        content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.' 
+      })
     } finally {
       setIsLoading(false)
     }
@@ -139,12 +133,17 @@ export function AssistantDock() {
     }
   }
 
-  const clearChat = () => {
-    setMessages([])
-    setIsExpanded(false)
+  const handleClearChat = () => {
+    if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử chat?')) {
+      clearMessages()
+      setIsExpanded(false)
+    }
   }
 
   if (!isVisible) return null
+
+  // Don't render until loaded from localStorage
+  if (!isLoaded) return null
 
   return (
     <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-4 max-w-[calc(100vw-3rem)]">
@@ -161,9 +160,22 @@ export function AssistantDock() {
                 <p className="text-xs text-muted-foreground">Hỏi tôi về tài liệu Smax...</p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsExpanded(false)}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              {messages.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={handleClearChat}
+                  title="Xóa lịch sử chat"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsExpanded(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Messages */}

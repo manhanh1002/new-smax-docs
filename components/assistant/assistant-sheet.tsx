@@ -1,23 +1,17 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, ArrowUp, Sparkles, Loader2 } from "lucide-react"
+import { X, ArrowUp, Sparkles, Loader2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { MarkdownRenderer } from "@/components/docs/markdown-renderer"
+import { useChatHistory } from "@/hooks/use-chat-history"
 
 import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
 import { trackAIChat as trackGA } from "@/lib/google-analytics"
 import { trackAnalyticsEvent } from "@/lib/actions/admin"
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  isStreaming?: boolean
-}
 
 interface AssistantSheetProps {
   open: boolean
@@ -29,10 +23,28 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
   const t = dictionaries[language]
   
   const [query, setQuery] = useState("")
-  const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messageIdCounter = useRef(0)
+
+  // Use the chat history hook for localStorage persistence
+  const { 
+    messages, 
+    addMessage, 
+    updateMessage, 
+    clearMessages, 
+    getHistoryForAPI,
+    addWelcomeMessage,
+    isLoaded,
+    isNewUser
+  } = useChatHistory()
+
+  // Show welcome message when opening chat for the first time
+  useEffect(() => {
+    if (isLoaded && open && isNewUser) {
+      addWelcomeMessage()
+    }
+  }, [isLoaded, open, isNewUser, addWelcomeMessage])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -41,31 +53,21 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
     }
   }, [messages])
 
-  // Clear messages when sheet closes
-  useEffect(() => {
-    if (!open) {
-      // Optional: clear chat when closing
-      // setMessages([])
-    }
-  }, [open])
-
   const sendMessage = async () => {
     if (!query.trim() || isLoading) return
 
-    const userMessage: Message = {
+    const userMessage = addMessage({
       id: `msg-${++messageIdCounter.current}`,
       role: 'user',
       content: query.trim()
-    }
+    })
 
-    const assistantMessage: Message = {
+    const assistantMessage = addMessage({
       id: `msg-${++messageIdCounter.current}`,
       role: 'assistant',
       content: '',
-      isStreaming: true
-    }
+    })
 
-    setMessages(prev => [...prev, userMessage, assistantMessage])
     setQuery("")
     setIsLoading(true)
     trackGA(messages.length + 1, language)
@@ -78,10 +80,7 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
         body: JSON.stringify({
           query: userMessage.content,
           lang: language,
-          history: messages.slice(-6).map(m => ({
-            role: m.role,
-            content: m.content
-          }))
+          history: getHistoryForAPI(6)
         })
       })
 
@@ -109,27 +108,14 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
         fullContent += chunk
 
         // Update the assistant message
-        setMessages(prev => prev.map(m => 
-          m.id === assistantMessage.id 
-            ? { ...m, content: fullContent }
-            : m
-        ))
+        updateMessage(assistantMessage.id, { content: fullContent })
       }
-
-      // Mark streaming as complete
-      setMessages(prev => prev.map(m => 
-        m.id === assistantMessage.id 
-          ? { ...m, isStreaming: false }
-          : m
-      ))
 
     } catch (error) {
       console.error('Chat error:', error)
-      setMessages(prev => prev.map(m => 
-        m.id === assistantMessage.id 
-          ? { ...m, content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.', isStreaming: false }
-          : m
-      ))
+      updateMessage(assistantMessage.id, { 
+        content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.' 
+      })
     } finally {
       setIsLoading(false)
     }
@@ -142,9 +128,14 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
     }
   }
 
-  const clearChat = () => {
-    setMessages([])
+  const handleClearChat = () => {
+    if (confirm(t.assistant.clearConfirm || 'Bạn có chắc muốn xóa toàn bộ lịch sử chat?')) {
+      clearMessages()
+    }
   }
+
+  // Don't render until loaded from localStorage
+  if (!isLoaded) return null
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -161,11 +152,12 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
             {messages.length > 0 && (
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-muted-foreground hover:text-foreground"
-                onClick={clearChat}
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={handleClearChat}
+                title={t.assistant.clearHistory || "Xóa lịch sử chat"}
               >
-                Clear
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
             <Button

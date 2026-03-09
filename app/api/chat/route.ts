@@ -1,11 +1,18 @@
 // app/api/chat/route.ts
 // RAG Chat API endpoint with streaming response
+// IMPROVED: Query Analysis + Multi-Query Search + Intent Classification
 
 import { NextRequest, NextResponse } from 'next/server'
 import { generateEmbedding } from '@/lib/embeddings'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { corsHeaders } from '@/lib/cors'
 import OpenAI from 'openai'
+import { 
+  analyzeQuery, 
+  getIntentPrompt, 
+  QueryAnalysis,
+  QueryIntent 
+} from '@/lib/query-analysis'
 
 // Initialize OpenAI client for Token.ai
 const client = new OpenAI({
@@ -52,6 +59,62 @@ Bạn là "Chuyên gia hỗ trợ SmaxAI" - một trợ lý thông minh, tận t
 - Tiêu đề ngắn (nếu cần).
 - Nội dung trả lời chính (chia đoạn rõ ràng).
 - 🔗 Tài liệu tham khảo: [Tên tài liệu](/tai-lieu/[lang]/[slug])
+
+---
+
+## ⚠️ QUAN TRỌNG: XỬ LÝ LỊCH SỬ HỘI THOẠI (CONVERSATION HISTORY)
+
+### 1. Đọc Kỹ Lịch Sử Trước Khi Trả Lời:
+- LUÔN kiểm tra [CONVERSATION_HISTORY] để hiểu ngữ cảnh câu chuyện.
+- Nếu user hỏi tiếp về nội dung đã được giải thích → KHÔNG lặp lại toàn bộ hướng dẫn cũ.
+- Thay vào đó: "Như mình đã hướng dẫn ở trên..." → Chỉ bổ sung phần còn thiếu hoặc làm rõ.
+
+### 2. Phát Hiện Câu Hỏi Nối Tiếp:
+- Nếu user dùng từ như: "còn", "thêm", "tiếp theo", "và phần kia", "cái đó là gì" → Đây là follow-up question.
+- Trả về thông tin MỚI, không lặp lại thông tin đã cung cấp.
+
+### 3. Ví Dụ Xử Lý:
+❌ SAI (lặp lại):
+User: "Cách kết nối Zalo OA?"
+AI: Hướng dẫn đầy đủ 5 bước...
+User: "Còn Telegram thì sao?"
+AI: Để kết nối Zalo OA bạn làm như sau... [LẶP LẠI]
+
+✅ ĐÚNG (không lặp):
+User: "Cách kết nối Zalo OA?"
+AI: Hướng dẫn đầy đủ 5 bước...
+User: "Còn Telegram thì sao?"
+AI: "Đối với Telegram, quy trình tương tự nhưng khác ở bước xác thực..." [CHỈ BỔ SUNG]
+
+---
+
+## ⚠️ QUAN TRỌNG: CÂU HỎI PHỨC TẠP - TRẢ LỜI NGẮN GỌN + LINK
+
+### Khi Nào Cần Trả Lời Ngắn Gọn:
+- Câu hỏi yêu cầu NHIỀU bước hướng dẫn (> 5 bước)
+- Câu hỏi có NHIỀU khái niệm cần giải thích
+- Câu hỏi so sánh nhiều tính năng
+
+### Cách Trả Lời:
+1. **Tóm tắt ngắn gọn** (2-3 câu) về câu trả lời
+2. **Đưa link bài viết chi tiết** ngay sau đó
+3. **Hỏi user** có muốn mình giải thích thêm phần nào không
+
+### Ví Dụ:
+❌ SAI (quá dài):
+"Dưới đây là hướng dẫn chi tiết 15 bước để thiết lập hệ thống bot auto đa kênh từ đầu đến cuối..." [2000 từ]
+
+✅ ĐÚNG (ngắn gọn + link):
+"Thiết lập bot auto đa kênh gồm 3 giai đoạn chính:
+1. **Kết nối các kênh** (Zalo, Facebook, Telegram...)
+2. **Tạo kịch bản bot** cho từng kênh
+3. **Thiết lập trigger** và điều kiện
+
+📘 **Hướng dẫn chi tiết từng bước:**
+- [Cài đặt Bot Auto](/tai-lieu/vi/cai-dat-bot-auto)
+- [Kết nối đa kênh](/tai-lieu/vi/ket-noi-da-kenh)
+
+Bạn muốn mình đi sâu vào phần nào?"
 `
 
 interface ChatRequest {
@@ -106,6 +169,115 @@ async function searchRelevantDocuments(
     console.error('Error in searchRelevantDocuments:', error)
     return []
   }
+}
+
+// IMPROVED: Multi-query search for complex questions
+// Searches with multiple queries and merges/dedupes results
+async function multiQuerySearch(
+  subQueries: string[],
+  lang: string,
+  matchThreshold: number,
+  matchCount: number
+): Promise<SearchResult[]> {
+  console.log(`[MultiQuery] Searching ${subQueries.length} sub-queries...`)
+  
+  const allResults: SearchResult[] = []
+  const seenIds = new Set<string>()
+  
+  // Process each sub-query
+  for (const subQuery of subQueries) {
+    try {
+      const embedding = await generateEmbedding(subQuery)
+      const results = await searchRelevantDocuments(embedding, lang, matchThreshold, matchCount)
+      
+      // Add unique results
+      for (const result of results) {
+        if (!seenIds.has(result.id)) {
+          seenIds.add(result.id)
+          allResults.push(result)
+        }
+      }
+      
+      // Small delay to avoid rate limiting
+      if (subQueries.indexOf(subQuery) < subQueries.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200))
+      }
+    } catch (error) {
+      console.error(`[MultiQuery] Error searching sub-query "${subQuery}":`, error)
+    }
+  }
+  
+  // Sort by similarity (descending)
+  allResults.sort((a, b) => b.similarity - a.similarity)
+  
+  // Limit total results
+  const maxResults = matchCount * 2 // Allow more results for complex queries
+  const limitedResults = allResults.slice(0, maxResults)
+  
+  console.log(`[MultiQuery] Found ${limitedResults.length} unique results from ${subQueries.length} queries`)
+  
+  return limitedResults
+}
+
+// IMPROVED: Enhanced context building with deduplication
+function buildEnhancedContext(results: SearchResult[], lang: string, intent: QueryIntent): string {
+  if (results.length === 0) {
+    return 'Không có thông tin liên quan trong cơ sở dữ liệu.'
+  }
+
+  // Group results by document for better organization
+  const docGroups = new Map<string, SearchResult[]>()
+  
+  for (const result of results) {
+    const docTitle = result.title || 'Unknown'
+    if (!docGroups.has(docTitle)) {
+      docGroups.set(docTitle, [])
+    }
+    docGroups.get(docTitle)!.push(result)
+  }
+
+  const contextParts: string[] = []
+  let docIndex = 0
+  
+  for (const [docTitle, chunks] of docGroups) {
+    docIndex++
+    
+    // Generate slug from the first chunk's URL
+    let slug = ''
+    const firstChunk = chunks[0]
+    if (firstChunk.url) {
+      const parts = firstChunk.url.split('/')
+      slug = cleanSlug(parts[parts.length - 1])
+    } else {
+      slug = docTitle
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+    }
+    
+    // Combine content from all chunks of this document
+    const combinedContent = chunks
+      .map(c => c.content)
+      .join('\n\n')
+    
+    // Replace image URLs
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://docs-smax.netlify.app'
+    const contentWithImages = combinedContent.replace(
+      /(\/api\/attachments\.redirect\?id=[a-zA-Z0-9-]+)/g,
+      `${appUrl}$1`
+    )
+
+    // Format based on intent
+    if (intent === 'comparison') {
+      contextParts.push(`📄 **${docTitle}** (Link: /tai-lieu/${lang}/${slug})\n${contentWithImages}`)
+    } else {
+      contextParts.push(`[Tài liệu ${docIndex}: ${docTitle}] (Link: /tai-lieu/${lang}/${slug})\n${contentWithImages}`)
+    }
+  }
+
+  return contextParts.join('\n\n---\n\n')
 }
 
 // Helper to strip Outline ID suffix from urlId (keep numbering)
@@ -189,27 +361,100 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Chat] Query: ${query}, Lang: ${lang}`)
 
-    // Step 2: Search for relevant documents
-    const queryEmbedding = await generateEmbedding(query)
-    const searchResults = await searchRelevantDocuments(queryEmbedding, lang as string)
+    // ========== IMPROVED: Query Analysis ==========
+    const analysis = analyzeQuery(query)
+    console.log(`[Chat] Analysis:`, {
+      intent: analysis.intent,
+      isComplex: analysis.isComplex,
+      subQueries: analysis.subQueries,
+      suggestedMatchCount: analysis.suggestedMatchCount,
+      suggestedThreshold: analysis.suggestedThreshold
+    })
+
+    // Handle greeting intent specially
+    if (analysis.intent === 'greeting') {
+      const greetingResponse = generateGreetingResponse(lang)
+      return new Response(greetingResponse, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-cache',
+          ...corsHeaders(origin),
+        }
+      })
+    }
+
+    // ========== IMPROVED: Multi-Query Search ==========
+    let searchResults: SearchResult[]
+    
+    if (analysis.isComplex && analysis.subQueries.length > 1) {
+      // Use multi-query search for complex queries
+      searchResults = await multiQuerySearch(
+        analysis.subQueries,
+        lang,
+        analysis.suggestedThreshold,
+        analysis.suggestedMatchCount
+      )
+    } else {
+      // Single query search
+      const queryEmbedding = await generateEmbedding(query)
+      searchResults = await searchRelevantDocuments(
+        queryEmbedding,
+        lang,
+        analysis.suggestedThreshold,
+        analysis.suggestedMatchCount
+      )
+    }
+    
     console.log(`[Chat] Found ${searchResults.length} relevant documents`)
 
-    // Step 3: Build context from search results
-    const context = buildContext(searchResults, lang as string)
+    // ========== IMPROVED: Enhanced Context Building ==========
+    const context = buildEnhancedContext(searchResults, lang, analysis.intent)
+
+    // ========== IMPROVED: Intent-Specific System Prompt ==========
+    const intentPrompt = getIntentPrompt(analysis.intent)
+    
+    // ========== IMPROVED: Build Conversation History Context ==========
+    let historyContext = ''
+    if (history && history.length > 0) {
+      const formattedHistory = history
+        .filter(m => m.role && m.content)
+        .map(m => `${m.role === 'user' ? '👤 User' : '🤖 Assistant'}: ${m.content}`)
+        .join('\n\n')
+      
+      historyContext = `
+---
+
+## [CONVERSATION_HISTORY]
+Dưới đây là lịch sử hội thoại trước đó. HÃY ĐỌC KỸ để:
+1. Không lặp lại hướng dẫn đã cung cấp
+2. Hiểu context của câu hỏi nối tiếp
+3. Chỉ bổ sung thông tin mới
+
+${formattedHistory}
+
+---
+`
+    }
+    
+    const fullSystemPrompt = `${RAG_SYSTEM_PROMPT}\n${intentPrompt}\n${historyContext}\nCONTEXT:\n${context}`
 
     // Step 4: Stream text using OpenAI SDK directly
     const model = process.env.CHAT_MODEL || 'gpt-4o-mini'
     
     // Prepare messages for OpenAI
+    // Note: We include history in system prompt for better context understanding
+    // The actual message history is kept minimal to avoid token limits
     const messages = [
-      { role: 'system', content: `${RAG_SYSTEM_PROMPT}\n\nCONTEXT:\n${context}` },
-      // Filter out invalid history messages
-      ...history.filter(m => m.role && m.content).map(m => ({ 
+      { role: 'system', content: fullSystemPrompt },
+      // Only include recent history (last 4 messages) to avoid token limits
+      ...history.filter(m => m.role && m.content).slice(-4).map(m => ({ 
         role: m.role as 'user' | 'assistant', 
         content: m.content 
       })),
       { role: 'user', content: query }
     ]
+    
+    console.log(`[Chat] History length: ${history?.length || 0}, Using last ${Math.min(history?.length || 0, 4)} messages`)
 
     try {
       const stream = await client.chat.completions.create({
@@ -217,7 +462,7 @@ export async function POST(request: NextRequest) {
         messages: messages as any,
         stream: true,
         temperature: 0.3,
-        max_tokens: 1000,
+        max_tokens: 1500, // Increased for complex answers
       })
 
       // Convert OpenAI stream to standard ReadableStream
@@ -273,4 +518,29 @@ export async function POST(request: NextRequest) {
       }
     })
   }
+}
+
+// Helper function for greeting responses
+function generateGreetingResponse(lang: string): string {
+  if (lang === 'en') {
+    return `👋 Hello! I'm the SmaxAI Support Assistant.
+
+I can help you with:
+- **Features**: Questions about Zalo OA, Facebook Messenger, Telegram, etc.
+- **Setup guides**: How to connect channels, configure bot auto, etc.
+- **Troubleshooting**: Fix issues with integrations
+- **Comparisons**: Help choose the right channel for your business
+
+What would you like to know?`
+  }
+  
+  return `👋 Xin chào! Tôi là Trợ lý Hỗ trợ SmaxAI.
+
+Tôi có thể giúp bạn với:
+- **Tính năng**: Câu hỏi về Zalo OA, Facebook Messenger, Telegram, v.v.
+- **Hướng dẫn cài đặt**: Cách kết nối kênh, cấu hình bot auto, v.v.
+- **Khắc phục sự cố**: Sửa lỗi tích hợp, kết nối
+- **So sánh**: Giúp chọn kênh phù hợp cho doanh nghiệp của bạn
+
+Bạn muốn biết điều gì?`
 }
