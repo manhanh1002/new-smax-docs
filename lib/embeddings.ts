@@ -342,79 +342,128 @@ export async function generateChatCompletion(
   }
 }
 
+// Helper: Sleep function for rate limiting
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 // Function to process a document: chunk content, generate embeddings, and store in document_sections table
+// IMPROVED: Sequential processing with rate limiting and retry logic
 export async function processDocumentForRAG(documentId: string, content: string) {
-  console.log(`Processing document ${documentId} for RAG`)
+  console.log(`[RAG] Processing document ${documentId}`)
+  
+  const MAX_RETRIES = 3
+  const RETRY_DELAY_MS = 5000
+  const CHUNK_DELAY_MS = 1500 // Rate limiting delay between chunks
   
   try {
+    // 0. Check if content is valid
+    if (!content || content.trim().length < 50) {
+      console.warn(`[RAG] Document ${documentId} has insufficient content (${content?.length || 0} chars), skipping`)
+      return { success: true, chunksProcessed: 0, reason: 'insufficient_content' }
+    }
+    
     // 1. Split content into chunks
     const chunks = splitTextIntoChunks(content, 1000, 200)
-    console.log(`Split document into ${chunks.length} chunks`)
+    console.log(`[RAG] Split document into ${chunks.length} chunks`)
     
     if (chunks.length === 0) {
-      console.warn(`No chunks generated for document ${documentId}`)
-      return
+      console.warn(`[RAG] No chunks generated for document ${documentId}`)
+      return { success: true, chunksProcessed: 0, reason: 'no_chunks' }
     }
 
-    // 1.5 Delete existing sections for this document to avoid duplicates
+    // 2. Delete existing sections for this document to avoid duplicates
     const { error: deleteError } = await supabaseAdmin
       .from('document_sections')
       .delete()
       .eq('document_id', documentId)
     
     if (deleteError) {
-      throw new Error(`Failed to delete existing sections: ${deleteError.message}`)
+      console.error(`[RAG] Failed to delete existing sections: ${deleteError.message}`)
+      // Continue anyway - might not have existing sections
     }
     
-    // 2. Process each chunk
-    const sectionPromises = chunks.map(async (chunk, index) => {
-      try {
-        // Generate embedding for this chunk
-        const embedding = await generateEmbedding(chunk)
-        
-        // Insert chunk into document_sections table
-        const { data, error } = await supabaseAdmin
-          .from('document_sections')
-          .insert({
-            document_id: documentId,
-            content: chunk,
-            embedding: embedding,
-            chunk_index: index,
-            chunk_count: chunks.length
-          })
-          .select()
-          .single()
-        
-        if (error) {
-          throw new Error(`Failed to insert chunk ${index}: ${error.message}`)
+    // 3. Process each chunk SEQUENTIALLY with rate limiting (not Promise.all)
+    let successCount = 0
+    let failedChunks: number[] = []
+    
+    for (let index = 0; index < chunks.length; index++) {
+      const chunk = chunks[index]
+      
+      // Retry logic for each chunk
+      let chunkSuccess = false
+      for (let retry = 0; retry < MAX_RETRIES; retry++) {
+        try {
+          // Generate embedding for this chunk
+          const embedding = await generateEmbedding(chunk)
+          
+          // Insert chunk into document_sections table
+          const { error } = await supabaseAdmin
+            .from('document_sections')
+            .insert({
+              document_id: documentId,
+              content: chunk,
+              embedding: embedding,
+              chunk_index: index,
+              chunk_count: chunks.length
+            })
+          
+          if (error) {
+            throw new Error(`Insert failed: ${error.message}`)
+          }
+          
+          successCount++
+          chunkSuccess = true
+          console.log(`[RAG] Chunk ${index + 1}/${chunks.length} processed successfully`)
+          break // Success, exit retry loop
+          
+        } catch (error) {
+          console.error(`[RAG] Chunk ${index} attempt ${retry + 1}/${MAX_RETRIES} failed:`, error)
+          
+          if (retry < MAX_RETRIES - 1) {
+            console.log(`[RAG] Retrying in ${RETRY_DELAY_MS}ms...`)
+            await sleep(RETRY_DELAY_MS)
+          }
         }
-        
-        return data
-      } catch (error) {
-        console.error(`Error processing chunk ${index} for document ${documentId}:`, error)
-        throw error
       }
-    })
+      
+      if (!chunkSuccess) {
+        failedChunks.push(index)
+      }
+      
+      // Rate limiting: delay between chunks (except for last chunk)
+      if (index < chunks.length - 1) {
+        await sleep(CHUNK_DELAY_MS)
+      }
+    }
     
-    // Wait for all chunks to be processed
-    const results = await Promise.all(sectionPromises)
-    
-    // 3. Update document metadata
+    // 4. Update document timestamp (chunk_count column doesn't exist in schema)
     const { error: updateError } = await supabaseAdmin
       .from('documents')
       .update({ 
-        chunk_count: chunks.length,
         updated_at: new Date().toISOString()
       })
       .eq('id', documentId)
     
     if (updateError) {
-      throw new Error(`Failed to update document metadata: ${updateError.message}`)
+      console.error(`[RAG] Failed to update document timestamp: ${updateError.message}`)
+      // Don't throw - chunks are already saved
     }
     
-    console.log(`Successfully processed document ${documentId} with ${results.length} chunks`)
+    // 5. Log result
+    if (failedChunks.length > 0) {
+      console.warn(`[RAG] Document ${documentId} processed with ${failedChunks.length} failed chunks: ${failedChunks.join(', ')}`)
+    } else {
+      console.log(`[RAG] Successfully processed document ${documentId} with ${successCount}/${chunks.length} chunks`)
+    }
+    
+    return { 
+      success: successCount > 0, 
+      chunksProcessed: successCount, 
+      totalChunks: chunks.length,
+      failedChunks 
+    }
+    
   } catch (error) {
-    console.error(`Failed to process document ${documentId} for RAG:`, error)
+    console.error(`[RAG] Failed to process document ${documentId}:`, error)
     throw error
   }
 }
