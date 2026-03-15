@@ -1,4 +1,3 @@
-/**
  * Script: Chunk all documents from Outline to Supabase
  * 
  * Features:

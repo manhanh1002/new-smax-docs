@@ -30,11 +30,12 @@ export interface QueryAnalysis {
 
 // ============================================
 // VIETNAMESE ABBREVIATION DICTIONARY
+// FIXED: Remove single-char abbreviations that break text
 // ============================================
 const VIETNAMESE_ABBREVIATIONS: Record<string, string> = {
-  // Viết tắt phổ biến
+  // Viết tắt phổ biến (tối thiểu 2 ký tự)
   'ko': 'không',
-  'k': 'không',
+  'k': 'không',       // Keep this as 'k' is often used standalone
   'kh': 'không',
   'ntn': 'như thế nào',
   'kq': 'kết quả',
@@ -48,21 +49,22 @@ const VIETNAMESE_ABBREVIATIONS: Record<string, string> = {
   'vs': 'với',
   'ms': 'mới',
   'tn': 'thế nào',
-  'mk': 'mình',  // cũng có thể là mật khẩu, nhưng phổ biến là mình
+  'mk': 'mình',
   'mjnh': 'mình',
   'mjk': 'mình',
   'aj': 'ai',
   'đâj': 'đây',
   'z': 'vậy',
   'r': 'rồi',
-  't': 'tao',
-  'm': 'mày',
-  'b': 'bạn',
-  'a': 'anh',
-  'e': 'em',
-  'c': 'chị',
-  'ch': 'cho',
-  'h': 'giờ',
+  // REMOVED: Single char abbreviations that break text
+  // 't': 'tao',  // BROKEN: Replaces every 't'
+  // 'm': 'mày',  // BROKEN: Replaces every 'm'
+  // 'b': 'bạn',  // BROKEN: Replaces every 'b'
+  // 'a': 'anh',   // BROKEN: Replaces every 'a'
+  // 'e': 'em',    // BROKEN: Replaces every 'e'
+  // 'c': 'chị',  // BROKEN: Replaces every 'c'
+  // 'ch': 'cho', // BROKEN: Replaces 'ch' in words like 'cho', 'chi'
+  // 'h': 'giờ',  // BROKEN: Replaces every 'h'
   'hn': 'hôm nay',
   'hnay': 'hôm nay',
   'mai': 'ngày mai',
@@ -83,24 +85,51 @@ const VIETNAMESE_ABBREVIATIONS: Record<string, string> = {
 
 // ============================================
 // DOMAIN-SPECIFIC TERM MAPPINGS (SmaxAI)
+// IMPROVED: Enhanced with more synonyms for better matching
 // ============================================
 const DOMAIN_TERM_MAPPINGS: Record<string, string[]> = {
+  // AI & Bot
   'ai': ['GenAI', 'trí tuệ nhân tạo', 'artificial intelligence'],
-  'bot': ['bot auto', 'chatbot', 'automation', 'tự động'],
-  'oa': ['Official Account', 'Zalo OA'],
-  'zalo': ['Zalo OA', 'Zalo Official Account'],
-  'fb': ['Facebook', 'Facebook Messenger'],
-  'tele': ['Telegram'],
+  'bot': ['bot auto', 'chatbot', 'automation', 'tự động', 'trợ lý ảo'],
+  'chatbot': ['bot auto', 'chatbot', 'automation', 'tự động', 'bot'],
+  'automation': ['bot auto', 'tự động', 'chatbot'],
+
+  // Zalo
+  'zalo': ['Zalo OA', 'Zalo Official Account', 'zalo oa'],
+  'oa': ['Official Account', 'Zalo OA', 'zalo oa'],
+  'zalo oa': ['Zalo Official Account', 'Zalo OA'],
+  'zalo user': ['Zalo User', 'zalo cá nhân'],
+
+  // Facebook
+  'fb': ['Facebook', 'Facebook Messenger', 'messenger'],
+  'facebook': ['Facebook Messenger', 'Meta Messenger', 'messenger'],
   'messenger': ['Facebook Messenger', 'Meta Messenger'],
-  'smax': ['SmaxAI', 'Smax'],
-  'livechat': ['Live Chat', 'trò chuyện trực tuyến'],
-  'api': ['API', 'giao diện lập trình'],
-  'webhook': ['Webhook', 'kết nối API'],
-  'broadcast': ['Broadcast', 'gửi tin nhắn hàng loạt'],
-  'segment': ['Segment', 'phân nhóm khách hàng'],
-  'trigger': ['Trigger', 'kích hoạt tự động'],
-  'template': ['Template', 'mẫu tin nhắn'],
-  'dashboard': ['Dashboard', 'bảng điều khiển'],
+
+  // Other channels
+  'tele': ['Telegram'],
+  'telegram': ['Telegram'],
+  'instagram': ['Instagram', 'IG'],
+  'tiktok': ['TikTok', '抖音'],
+  'whatsapp': ['WhatsApp', 'WA'],
+  'livechat': ['Live Chat', 'trò chuyện trực tuyến', 'chat web'],
+  'website': ['trang web', 'web'],
+
+  // Smax
+  'smax': ['SmaxAI', 'Smax', 'smax ai'],
+
+  // Features
+  'api': ['API', 'giao diện lập trình', 'lập trình'],
+  'webhook': ['Webhook', 'kết nối API', 'webhook'],
+  'broadcast': ['Broadcast', 'gửi tin nhắn hàng loạt', 'tin nhắn hàng loạt', 'mass message'],
+  'segment': ['Segment', 'phân nhóm khách hàng', 'nhóm khách hàng'],
+  'trigger': ['Trigger', 'kích hoạt tự động', 'điều kiện kích hoạt'],
+  'template': ['Template', 'mẫu tin nhắn', 'tin nhắn mẫu'],
+  'dashboard': ['Dashboard', 'bảng điều khiển', 'trang tổng quan'],
+
+  // Additional
+  'kết nối': ['tích hợp', 'cài đặt', 'thiết lập', 'setup', 'connect'],
+  'gửi tin': ['tin nhắn', 'message', 'nhắn tin'],
+  'khách hàng': ['customer', 'user', 'người dùng', 'client'],
 }
 
 // ============================================
@@ -124,7 +153,8 @@ const INTENT_KEYWORDS: Record<QueryIntent, string[]> = {
     'error', 'not working', 'failed', 'issue', 'problem', 'cannot', "can't"
   ],
   greeting: [
-    'xin chào', 'hello', 'hi', 'chào', 'hey', 'good morning', 'good afternoon'
+    'xin chào', 'hello', 'chào', 'hey', 'good morning', 'good afternoon',
+    'hi there', 'hi all'
   ],
   general: []
 }
@@ -366,6 +396,7 @@ export function expandQuery(query: string): string[] {
 
 /**
  * Get suggested search parameters based on intent
+ * IMPROVED: Lower thresholds and higher match counts for better retrieval
  */
 export function getSearchParams(intent: QueryIntent, isComplex: boolean): {
   matchCount: number
@@ -373,15 +404,15 @@ export function getSearchParams(intent: QueryIntent, isComplex: boolean): {
 } {
   switch (intent) {
     case 'comparison':
-      return { matchCount: isComplex ? 10 : 8, threshold: 0.25 }
+      return { matchCount: isComplex ? 15 : 12, threshold: 0.1 }
     case 'how_to':
-      return { matchCount: 6, threshold: 0.3 }
+      return { matchCount: 12, threshold: 0.1 }
     case 'troubleshooting':
-      return { matchCount: 5, threshold: 0.35 }
+      return { matchCount: 10, threshold: 0.15 }
     case 'feature_inquiry':
-      return { matchCount: isComplex ? 8 : 5, threshold: 0.28 }
+      return { matchCount: isComplex ? 15 : 10, threshold: 0.1 }
     default:
-      return { matchCount: 5, threshold: 0.3 }
+      return { matchCount: 10, threshold: 0.1 }
   }
 }
 

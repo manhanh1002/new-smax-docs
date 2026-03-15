@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, ArrowUp, Sparkles, Loader2, Trash2 } from "lucide-react"
+import { X, ArrowUp, Sparkles, Loader2, Trash2, ChevronDown, ChevronRight, Lightbulb } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
@@ -12,6 +12,59 @@ import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
 import { trackAIChat as trackGA } from "@/lib/google-analytics"
 import { trackAnalyticsEvent } from "@/lib/actions/admin"
+
+// Helper to parse thinking from response
+function parseThinkingResponse(content: string): { thinking: string; answer: string } {
+  const thinkingMatch = content.match(/\[THINKING\]([\s\S]*?)\[\/THINKING\]/)
+  const answerMatch = content.match(/\[ANSWER\]([\s\S]*?)\[\/ANSWER\]/)
+
+  return {
+    thinking: thinkingMatch?.[1]?.trim() || '',
+    answer: answerMatch?.[1]?.trim() || content.replace(/\[THINKING\][\s\S]*?\[\/THINKING\]/g, '').trim()
+  }
+}
+
+// Component to display thinking in collapsible section
+function ThinkingResponse({ content }: { content: string }) {
+  const [showThinking, setShowThinking] = useState(false)
+  const { thinking, answer } = parseThinkingResponse(content)
+
+  // If no thinking section, just render normally
+  if (!thinking) {
+    return <MarkdownRenderer content={content} />
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Collapsible thinking section */}
+      <div className="border rounded-lg overflow-hidden">
+        <button
+          onClick={() => setShowThinking(!showThinking)}
+          className="w-full flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-sm hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
+        >
+          {showThinking ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+          <Lightbulb className="h-4 w-4" />
+          <span className="font-medium">Quá trình suy nghĩ</span>
+        </button>
+
+        {showThinking && (
+          <div className="px-3 py-2 bg-amber-50 dark:bg-amber-950 border-t text-sm">
+            <MarkdownRenderer content={thinking} />
+          </div>
+        )}
+      </div>
+
+      {/* Answer section */}
+      <div>
+        <MarkdownRenderer content={answer} />
+      </div>
+    </div>
+  )
+}
 
 interface AssistantSheetProps {
   open: boolean
@@ -205,7 +258,7 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
                       {message.role === 'assistant' ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none">
                           {message.content ? (
-                            <MarkdownRenderer content={message.content} />
+                            <ThinkingResponse content={message.content} />
                           ) : (
                             <div className="flex items-center gap-2">
                               <Loader2 className="h-4 w-4 animate-spin" />
