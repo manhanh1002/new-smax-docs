@@ -7,12 +7,13 @@ import { generateEmbedding } from '@/lib/embeddings'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { corsHeaders } from '@/lib/cors'
 import OpenAI from 'openai'
-import { 
-  analyzeQuery, 
-  getIntentPrompt, 
+import {
+  analyzeQuery,
+  getIntentPrompt,
   QueryAnalysis,
-  QueryIntent 
+  QueryIntent
 } from '@/lib/query-analysis'
+import { enhancedSearch } from '@/lib/enhanced-search'
 
 // Initialize OpenAI client for Token.ai
 const client = new OpenAI({
@@ -141,7 +142,7 @@ interface SearchResult {
   title: string
   content: string
   similarity: number
-  language: string
+  language?: string
   url?: string
   document_path?: string // from RPC
   document_title?: string // from RPC
@@ -402,24 +403,24 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // ========== IMPROVED: Multi-Query Search ==========
+    // ========== HYBRID SEARCH ==========
     let searchResults: SearchResult[]
-    
-    if (analysis.isComplex && analysis.subQueries.length > 1) {
-      // Use multi-query search for complex queries
-      // Normalize each sub-query
-      const normalizedSubQueries = analysis.subQueries.map(sq => {
-        const subAnalysis = analyzeQuery(sq)
-        return subAnalysis.normalizedQuery
-      })
-      searchResults = await multiQuerySearch(
-        normalizedSubQueries,
+
+    // Try enhanced search first (hybrid search with query expansion + re-ranking)
+    try {
+      searchResults = await enhancedSearch(
+        queryForEmbedding,
         lang,
-        analysis.suggestedThreshold,
-        analysis.suggestedMatchCount
+        {
+          expandVariants: true,
+          useReranking: true,
+          matchCount: 25,
+          matchThreshold: 0.05,
+        }
       )
-    } else {
-      // Single query search - use normalized query for better matching
+    } catch (error) {
+      console.error('[Chat] Enhanced search failed, using basic search:', error)
+      // Fallback to basic vector search
       const queryEmbedding = await generateEmbedding(queryForEmbedding)
       searchResults = await searchRelevantDocuments(
         queryEmbedding,
@@ -428,7 +429,23 @@ export async function POST(request: NextRequest) {
         analysis.suggestedMatchCount
       )
     }
-    
+
+    // If still no results, try with lower threshold
+    if (searchResults.length === 0) {
+      try {
+        const queryEmbedding = await generateEmbedding(queryForEmbedding)
+        searchResults = await searchRelevantDocuments(
+          queryEmbedding,
+          lang,
+          0.01,
+          20
+        )
+      } catch (e) {
+        console.error('[Chat] Fallback search also failed:', e)
+        searchResults = []
+      }
+    }
+
     console.log(`[Chat] Found ${searchResults.length} relevant documents`)
 
     // ========== IMPROVED: Enhanced Context Building ==========
