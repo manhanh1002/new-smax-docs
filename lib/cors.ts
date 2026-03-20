@@ -20,10 +20,13 @@ export function corsHeaders(origin: string | null): Record<string, string> {
     'Access-Control-Max-Age': '86400',
   }
 
-  // Check if origin is allowed
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.smax.ai'))) {
+  // ALLOW ALL ORIGINS for public widget access
+  // In a stricter environment, we could check a whitelist or API key
+  if (origin) {
     headers['Access-Control-Allow-Origin'] = origin
     headers['Access-Control-Allow-Credentials'] = 'true'
+  } else {
+    headers['Access-Control-Allow-Origin'] = '*'
   }
 
   return headers
