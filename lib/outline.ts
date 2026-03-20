@@ -141,8 +141,9 @@ export async function getOutlineDocuments(
   const { limit: _l, offset: _o, ...fetchOptions } = options
   
   while (true) {
+    const apiLimit = Math.min(limit, 100)
     const body: Record<string, unknown> = {
-      limit,
+      limit: apiLimit,
       offset,
     }
 
@@ -157,14 +158,14 @@ export async function getOutlineDocuments(
     
     allDocs.push(...docs)
     
-    // If we received fewer docs than limit, we've reached the end
-    if (docs.length < limit) break
+    // If we received fewer docs than what we asked for in THIS request, we've reached the end
+    if (docs.length < apiLimit) break
     
     // If user specified a limit and we reached it, stop
     if (options.limit && allDocs.length >= options.limit) break
     
     // Prepare for next page
-    offset += limit
+    offset += apiLimit
     
     // Safety break to prevent infinite loops in case of API issues
     if (offset > 10000) {

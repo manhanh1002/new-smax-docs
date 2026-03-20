@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
-import { Copy, Check, Info, Code, Layers, Globe } from 'lucide-react'
+import { Copy, Check, Info, Code, Layers, Globe, Lock, RefreshCw } from 'lucide-react'
+import { Badge } from "@/components/ui/badge"
 
 function escapeHtml(str: string): string {
   return str
@@ -27,6 +28,16 @@ export default function EmbedCodePage() {
   const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [activeTab, setActiveTab] = useState('script')
   const [copied, setCopied] = useState<'idle' | 'copied'>('idle')
+  const [apiKey, setApiKey] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/api-key')
+      .then(res => res.json())
+      .then(data => {
+        if (data.apiKey) setApiKey(data.apiKey)
+      })
+      .catch(err => console.error('Error fetching API key:', err))
+  }, [])
 
   const sdkScriptSrc = `${apiBaseUrl}/sdk-dist/smaxai-chat.min.js`
   
@@ -202,16 +213,70 @@ SmaxAIChat.init({
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="api" className="mt-0 space-y-2">
+                <TabsContent value="api" className="mt-0 space-y-4 pt-4">
                   <div className="flex justify-between items-start">
-                    <p className="text-sm font-medium">Gọi trực tiếp vào Backend RAG</p>
+                    <div>
+                      <p className="text-sm font-semibold flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-orange-600" />
+                        Bảo mật với API Key
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Dùng Header <code className="bg-muted px-1 rounded text-orange-700">x-api-key</code> để xác thực khi gọi API từ Terminal hoặc Backend.
+                      </p>
+                    </div>
                     <Button variant="link" size="sm" asChild className="h-auto p-0 text-primary">
                       <Link href="/admin/api-docs">Xem tài liệu chi tiết →</Link>
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Kết nối trực tiếp vào hệ thống AI thông qua API. Endpoint này chỉ hỗ trợ các domain được <b>whitelist</b> (smax.ai, dev.smax.ai).
-                    Bạn có thể truyền <code className="bg-muted px-1 py-0.5 rounded">history</code> để AI nhớ ngữ cảnh cuộc trò chuyện.
+
+                  {/* API Key section */}
+                  <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium text-orange-900 uppercase tracking-wider">Mã API Key Hiện Tại</Label>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 text-xs gap-2 bg-white hover:bg-orange-100 border-orange-200"
+                        onClick={async () => {
+                          if (confirm('Bạn có chắc muốn cấp lại API Key mới? Key cũ sẽ bị vô hiệu hóa ngay lập tức.')) {
+                            const res = await fetch('/api/admin/api-key', { method: 'POST' });
+                            const data = await res.json();
+                            if (data.apiKey) {
+                              setApiKey(data.apiKey);
+                              toast.success('Đã tạo API Key mới thành công!');
+                            }
+                          }
+                        }}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Tạo mới (Regen)
+                      </Button>
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input 
+                        readOnly 
+                        value={apiKey || 'Đang tải hoặc chưa tạo...'} 
+                        className="font-mono text-sm bg-white border-orange-200 pr-10 focus-visible:ring-orange-500" 
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="absolute right-0 top-0 h-full hover:bg-orange-100"
+                        onClick={() => {
+                          if (apiKey) {
+                            navigator.clipboard.writeText(apiKey);
+                            toast.success('Đã copy API Key');
+                          }
+                        }}
+                      >
+                        <Copy className="h-4 w-4 text-orange-600" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed italic">
+                    Lưu ý: Domain được whitelist (smax.ai) vẫn được gọi từ trình duyệt mà không cần Key này nhờ cơ chế CORS.
                   </p>
                 </TabsContent>
               </CardContent>

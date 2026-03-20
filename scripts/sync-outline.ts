@@ -26,9 +26,8 @@ async function syncOutlineDocs() {
   console.log('Starting sync from Outline...')
   
   try {
-    // 1. Fetch all documents from Outline
-    // Note: Pagination might be needed if you have > 100 docs, but getOutlineDocuments default limit is 100
-    const outlineDocs = await getOutlineDocuments(undefined, { limit: 100 })
+    // Note: Pagination handled by getOutlineDocuments, boost limit to catch everything
+    const outlineDocs = await getOutlineDocuments(undefined, { limit: 500 })
     console.log(`Found ${outlineDocs.length} documents on Outline`)
     
     if (outlineDocs.length === 0) {

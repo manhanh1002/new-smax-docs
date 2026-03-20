@@ -3,7 +3,7 @@
 
 import { NextResponse } from 'next/server'
 
-const ALLOWED_ORIGINS = [
+export const ALLOWED_ORIGINS = [
   'https://smax.ai',
   'https://www.smax.ai',
   'https://dev.smax.ai',

@@ -62,15 +62,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Trigger RAG Processing (Chunking & Embedding)
-    // We do this asynchronously or blocking depending on Vercel timeout limits.
-    // For simplicity, blocking for now. If it times out, we should move to background jobs (Inngest/Trigger.dev).
-    try {
-      await processDocumentForRAG(document.id, payload.text)
-    } catch (ragError) {
-      console.error('Error processing RAG:', ragError)
-      // We don't fail the webhook if RAG fails, but we should log it or retry
-      // Return 202 Accepted maybe? But we already committed the document.
-    }
+    // IMPORTANT: We do this ASYNCHRONOUSLY to avoid webhook timeout.
+    // The response is sent back to Outline immediately after metadata is saved.
+    // Since we're in a Node.js environment, the process will continue.
+    console.log(`[Webhook] Starting background RAG processing for ${document.id}`)
+    processDocumentForRAG(document.id, payload.text).catch(ragError => {
+      console.error('[Webhook] Async RAG processing failed:', ragError)
+    })
 
     // 6. Revalidate Cache (ISR)
     // This ensures that the updated content is visible immediately
