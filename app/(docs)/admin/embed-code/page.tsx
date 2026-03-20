@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -202,9 +203,14 @@ SmaxAIChat.init({
                 </TabsContent>
                 
                 <TabsContent value="api" className="mt-0 space-y-2">
-                  <p className="text-sm font-medium">Gọi trực tiếp vào Backend RAG</p>
+                  <div className="flex justify-between items-start">
+                    <p className="text-sm font-medium">Gọi trực tiếp vào Backend RAG</p>
+                    <Button variant="link" size="sm" asChild className="h-auto p-0 text-primary">
+                      <Link href="/admin/api-docs">Xem tài liệu chi tiết →</Link>
+                    </Button>
+                  </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Kết nối trực tiếp vào hệ thống AI thông qua API. Endpoint này hỗ trợ <b>vô hiệu hóa CORS</b> (cho phép mọi domain gọi vào).
+                    Kết nối trực tiếp vào hệ thống AI thông qua API. Endpoint này chỉ hỗ trợ các domain được <b>whitelist</b> (smax.ai, dev.smax.ai).
                     Bạn có thể truyền <code className="bg-muted px-1 py-0.5 rounded">history</code> để AI nhớ ngữ cảnh cuộc trò chuyện.
                   </p>
                 </TabsContent>

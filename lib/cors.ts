@@ -6,11 +6,14 @@ import { NextResponse } from 'next/server'
 const ALLOWED_ORIGINS = [
   'https://smax.ai',
   'https://www.smax.ai',
-  'https://smax.ai',
+  'https://dev.smax.ai',
   'https://biz.smax.ai',
-  'https://docs.cdp.vn',
+  'https://admin.smax.ai',
+  'https://cdp.vn',
+  'https://bot.vn',
+  'https://tailieu.smax.ai',
   'http://localhost:3000',
-  'http://localhost:3001',
+  'http://localhost:4000',
 ]
 
 export function corsHeaders(origin: string | null): Record<string, string> {
@@ -20,13 +23,10 @@ export function corsHeaders(origin: string | null): Record<string, string> {
     'Access-Control-Max-Age': '86400',
   }
 
-  // ALLOW ALL ORIGINS for public widget access
-  // In a stricter environment, we could check a whitelist or API key
-  if (origin) {
+  // Restrict to allowed origins
+  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.smax.ai'))) {
     headers['Access-Control-Allow-Origin'] = origin
     headers['Access-Control-Allow-Credentials'] = 'true'
-  } else {
-    headers['Access-Control-Allow-Origin'] = '*'
   }
 
   return headers
