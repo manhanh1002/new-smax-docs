@@ -1,7 +1,8 @@
-
 import { getDashboardStats } from "@/lib/actions/admin"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Star, MessageSquare, Activity, ThumbsUp, Eye } from "lucide-react"
+import { RecentActivityChart } from "./_components/recent-activity-chart"
+import { PopularArticlesChart } from "./_components/popular-articles-chart"
 
 export default async function DashboardPage() {
   const stats = await getDashboardStats()
@@ -9,7 +10,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Tổng quan hệ thống</h1>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -67,17 +68,14 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Additional Charts Placeholder - Can be implemented with Client Components */}
+      {/* Charts Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Hoạt động gần đây</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Biểu đồ: Xu hướng đánh giá hàng ngày (Hữu ích vs Dễ hiểu)</p>
-            <div className="h-[200px] flex items-center justify-center border-dashed border rounded bg-muted/20 mt-4">
-              Đang phát triển
-            </div>
+            <RecentActivityChart />
           </CardContent>
         </Card>
         <Card className="col-span-3">
@@ -85,10 +83,7 @@ export default async function DashboardPage() {
             <CardTitle>Bài viết phổ biến</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Danh sách: Top 5 bài viết được đánh giá cao nhất</p>
-             <div className="h-[200px] flex items-center justify-center border-dashed border rounded bg-muted/20 mt-4">
-              Đang phát triển
-            </div>
+            <PopularArticlesChart />
           </CardContent>
         </Card>
       </div>

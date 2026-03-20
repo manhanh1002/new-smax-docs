@@ -1,45 +1,19 @@
-// sdk/src/index.ts
-// Entry point for SDK bundle
-
 import { SmaxAIChatWidget, WidgetConfig } from './widget'
 
-// Auto-initialize singleton
-let widgetInstance: SmaxAIChatWidget | null = null
+let instance: SmaxAIChatWidget | null = null;
 
-// Create the API object
-const createAPI = () => ({
-  init: (config: WidgetConfig = {}) => {
-    // Destroy existing instance
-    if (widgetInstance) {
-      widgetInstance.destroy()
-    }
-    
-    // Create new instance
-    widgetInstance = new SmaxAIChatWidget(config)
-    
-    return widgetInstance
+(window as any).SmaxAIChat = {
+  init: (cfg: WidgetConfig = {}) => { 
+    if (instance) instance.destroy(); 
+    instance = new SmaxAIChatWidget(cfg); 
+    return instance 
   },
-  get widget() {
-    return widgetInstance
-  }
-})
-
-// Expose globally - this is what esbuild IIFE will return
-// And we also assign to window for direct access
-const SmaxAIChat = createAPI()
-
-// Assign to window immediately
-if (typeof window !== 'undefined') {
-  (window as any).SmaxAIChat = SmaxAIChat
+  get widget() { return instance }
 }
 
-// Auto-init if data-auto-init attribute present
-if (typeof document !== 'undefined' && document.currentScript?.hasAttribute('data-auto-init')) {
-  document.addEventListener('DOMContentLoaded', () => {
-    SmaxAIChat.init()
+// Auto-init
+if (document.currentScript?.hasAttribute('data-auto-init')) {
+  document.addEventListener('DOMContentLoaded', () => { 
+    (window as any).SmaxAIChat.init() 
   })
 }
-
-// Export for ESM users
-export { SmaxAIChatWidget }
-export default SmaxAIChat

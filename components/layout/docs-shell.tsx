@@ -37,7 +37,7 @@ function DocsShellContent({ children }: DocsShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   // Check if we are in admin section
-  const isAdmin = pathname?.startsWith('/tai-lieu/admin')
+  const isAdmin = pathname?.startsWith('/admin')
 
   // Find current section and page for breadcrumbs
   const currentNav = navigation.find((section) => section.items.some((item) => item.href === pathname))

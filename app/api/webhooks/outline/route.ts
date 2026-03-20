@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Upsert Document Metadata
     const slug = payload.urlId || generateSlug(payload.title)
-    const docPath = `/tai-lieu/${lang}/${slug}`
+    const docPath = `/${lang}/${slug}`
 
     const { data: document, error: upsertError } = await supabaseAdmin
       .from('documents')
@@ -76,8 +76,8 @@ export async function POST(req: NextRequest) {
     // This ensures that the updated content is visible immediately
     try {
         revalidatePath(docPath)
-        revalidatePath(`/tai-lieu/${lang}`) // Revalidate index page
-        console.log(`Revalidated paths: ${docPath}, /tai-lieu/${lang}`)
+        revalidatePath(`/${lang}`) // Revalidate index page
+        console.log(`Revalidated paths: ${docPath}, /${lang}`)
     } catch (revalidateError) {
         console.error('Error revalidating cache:', revalidateError)
     }

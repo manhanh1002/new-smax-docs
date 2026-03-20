@@ -66,13 +66,13 @@ Với các câu hỏi, HÃY hiển thị quá trình suy nghĩ theo format sau:
 
 # URL Citation Rules:
 - KHI CÓ THÔNG TIN TỪ TÀI LIỆU: Luôn trích dẫn URL chính xác từ [CONTEXT]
-- URL PHẢI LÀ: /tai-lieu/[lang]/[slug] (không dùng smax.ai hoặc các domain khác)
-- Thay thế các domain cũ (smax.ai, max.ai) bằng docs.cdp.vn/tai-lieu/ nếu cần thiết.
+- URL PHẢI LÀ: /[lang]/[slug] (không dùng smax.ai hoặc các domain khác)
+- Thay thế các domain cũ (smax.ai, max.ai) bằng docs.cdp.vn/ nếu cần thiết.
 
 # Output Format:
 - Tiêu đề ngắn (nếu cần).
 - Nội dung trả lời chính (chia đoạn rõ ràng).
-- 🔗 Tài liệu tham khảo: [Tên tài liệu](/tai-lieu/[lang]/[slug])
+- 🔗 Tài liệu tham khảo: [Tên tài liệu](/[lang]/[slug])
 
 ---
 
@@ -125,8 +125,8 @@ AI: "Đối với Telegram, quy trình tương tự nhưng khác ở bước xá
 3. **Thiết lập trigger** và điều kiện
 
 📘 **Hướng dẫn chi tiết từng bước:**
-- [Cài đặt Bot Auto](/tai-lieu/vi/cai-dat-bot-auto)
-- [Kết nối đa kênh](/tai-lieu/vi/ket-noi-da-kenh)
+- [Cài đặt Bot Auto](/vi/cai-dat-bot-auto)
+- [Kết nối đa kênh](/vi/ket-noi-da-kenh)
 
 Bạn muốn mình đi sâu vào phần nào?"
 `
@@ -285,9 +285,9 @@ function buildEnhancedContext(results: SearchResult[], lang: string, intent: Que
 
     // Format based on intent
     if (intent === 'comparison') {
-      contextParts.push(`📄 **${docTitle}** (Link: /tai-lieu/${lang}/${slug})\n${contentWithImages}`)
+      contextParts.push(`📄 **${docTitle}** (Link: /${lang}/${slug})\n${contentWithImages}`)
     } else {
-      contextParts.push(`[Tài liệu ${docIndex}: ${docTitle}] (Link: /tai-lieu/${lang}/${slug})\n${contentWithImages}`)
+      contextParts.push(`[Tài liệu ${docIndex}: ${docTitle}] (Link: /${lang}/${slug})\n${contentWithImages}`)
     }
   }
 
@@ -344,7 +344,7 @@ function buildContext(results: SearchResult[], lang: string): string {
         `${appUrl}$1`
     )
 
-    return `[Tài liệu ${index + 1}: ${result.title}] (Link tham khảo: /tai-lieu/${lang}/${slug})\n${contentWithImages}`
+    return `[Tài liệu ${index + 1}: ${result.title}] (Link tham khảo: /${lang}/${slug})\n${contentWithImages}`
   })
 
   return contextParts.join('\n\n---\n\n')

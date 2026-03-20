@@ -69,10 +69,10 @@ export default async function SmaxDocsSlugPage({ params }: DocPageProps) {
 
   return (
     <>
-      <DocContent 
-        title={page.title} 
-        content={page.content} 
-        slug={slugPath} 
+      <DocContent
+        title={page.title}
+        content={page.content}
+        slug={slugPath}
         lastUpdated={page.last_updated}
         pager={pager}
         breadcrumbs={page.breadcrumbs}

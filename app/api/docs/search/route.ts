@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         title: doc.title,
         slug: doc.slug,
         description: doc.description,
-        href: `/tai-lieu/${lang}/${doc.slug}`,
+        href: `/${lang}/${doc.slug}`,
         lastUpdated: doc.last_updated,
       })),
       count: results.length,

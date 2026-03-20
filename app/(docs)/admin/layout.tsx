@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { useState, useEffect } from "react"
-import { LayoutDashboard, Star, BarChart3, LogOut, Loader2 } from "lucide-react"
+import { LayoutDashboard, Star, BarChart3, LogOut, Loader2, TrendingUp, Code2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -24,18 +24,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       // If no session and not on login page, redirect
-      if (!session && pathname !== '/tai-lieu/admin/login') {
-        router.push('/tai-lieu/admin/login')
-      } else if (session && pathname === '/tai-lieu/admin/login') {
+      if (!session && pathname !== '/admin/login') {
+        router.push('/admin/login')
+      } else if (session && pathname === '/admin/login') {
         // If session exists and on login page, redirect to dashboard
-        router.push('/tai-lieu/admin')
+        router.push('/admin')
         setIsAuthorized(true)
       } else {
-        setIsAuthorized(!!session || pathname === '/tai-lieu/admin/login')
+        setIsAuthorized(!!session || pathname === '/admin/login')
       }
-      
+
       setIsLoading(false)
     }
 
@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    router.push('/tai-lieu/admin/login')
+    router.push('/admin/login')
   }
 
   // Loading state
@@ -57,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Login page layout (no sidebar)
-  if (pathname === '/tai-lieu/admin/login') {
+  if (pathname === '/admin/login') {
     return <div className="min-h-screen bg-muted/20">{children}</div>
   }
 
@@ -72,56 +72,82 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-card border-r border-border shrink-0">
         <div className="p-6 border-b border-border">
-          <Link href="/tai-lieu/admin" className="flex items-center gap-2 font-bold text-xl">
+          <Link href="/admin" className="flex items-center gap-2 font-bold text-xl">
             <span className="text-primary">SmaxAI</span> Admin
           </Link>
         </div>
-        
+
         <nav className="p-4 space-y-2">
-          <Link 
-            href="/tai-lieu/admin" 
+          <Link
+            href="/admin"
             className={cn(
               "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
-              pathname === "/tai-lieu/admin" 
-                ? "bg-primary text-primary-foreground" 
+              pathname === "/admin"
+                ? "bg-primary text-primary-foreground"
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
           >
             <LayoutDashboard className="h-4 w-4" />
             Tổng quan
           </Link>
-          
-          <Link 
-            href="/tai-lieu/admin/ratings" 
+
+          <Link
+            href="/admin/ratings"
             className={cn(
               "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
-              pathname === "/tai-lieu/admin/ratings" 
-                ? "bg-primary text-primary-foreground" 
+              pathname === "/admin/ratings"
+                ? "bg-primary text-primary-foreground"
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
           >
             <Star className="h-4 w-4" />
             Đánh giá
           </Link>
-          
-          <Link 
-            href="/tai-lieu/admin/analytics" 
+
+          <Link
+            href="/admin/analytics"
             className={cn(
               "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
-              pathname === "/tai-lieu/admin/analytics" 
-                ? "bg-primary text-primary-foreground" 
+              pathname === "/admin/analytics"
+                ? "bg-primary text-primary-foreground"
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
           >
             <BarChart3 className="h-4 w-4" />
             Phân tích
           </Link>
+
+          <Link
+            href="/admin/insights"
+            className={cn(
+              "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
+              pathname === "/admin/insights"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <TrendingUp className="h-4 w-4" />
+            Insights
+          </Link>
+
+          <Link
+            href="/admin/embed-code"
+            className={cn(
+              "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
+              pathname === "/admin/embed-code"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Code2 className="h-4 w-4" />
+            Mã Nhúng
+          </Link>
         </nav>
 
         <div className="p-4 mt-auto border-t border-border">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start gap-2 text-muted-foreground" 
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2 text-muted-foreground"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />

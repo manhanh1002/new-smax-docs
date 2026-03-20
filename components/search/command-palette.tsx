@@ -190,7 +190,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {showQuickLinks && (
           <CommandGroup heading={t.search.quickLinks}>
             <CommandItem
-              onSelect={() => handleSelect(`/tai-lieu/${language}/quickstart`)}
+              onSelect={() => handleSelect(`/${language}/quickstart`)}
               className="group flex items-center gap-3 py-3 sm:py-2"
             >
               <Hash
@@ -200,7 +200,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               <span>{t.search.gettingStarted}</span>
             </CommandItem>
             <CommandItem 
-              onSelect={() => handleSelect(`/tai-lieu/${language}/cli`)} 
+              onSelect={() => handleSelect(`/${language}/cli`)} 
               className="group flex items-center gap-3 py-3 sm:py-2"
             >
               <Hash

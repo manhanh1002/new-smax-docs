@@ -54,7 +54,7 @@ async function testChatEndpoint() {
       console.log('❌ Wrong URLs:', hasWrongUrls ? 'YES' : 'NO')
       
       // Check for correct format
-      const hasCorrectUrls = result.includes('/tai-lieu/') || result.includes('docs.cdp.vn')
+      const hasCorrectUrls = (result.includes('/vi/') || result.includes('/en/')) || result.includes('docs.cdp.vn')
       console.log('✅ Correct URLs:', hasCorrectUrls ? 'YES' : 'NO')
       
       // Check for markdown formatting

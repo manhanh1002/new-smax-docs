@@ -11,7 +11,7 @@ export const revalidate = 60 // Revalidate every 60 seconds (ISR)
 
 export default async function DocsIndexPage({ params }: DocPageProps) {
   const { lang } = await params
-  
+
   // Get the sorted document tree
   const tree = await getDocTree(lang)
 
@@ -35,5 +35,5 @@ export default async function DocsIndexPage({ params }: DocPageProps) {
   }
 
   // Redirect to the first document
-  redirect(`/tai-lieu/${lang}/${currentNode.slug}`)
+  redirect(`/${lang}/${currentNode.slug}`)
 }

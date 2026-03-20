@@ -40,7 +40,7 @@ export function Topbar({ onSearchClick, onMenuClick }: TopbarProps) {
     setMounted(true)
   }, [])
 
-  const t = dictionaries[lang]
+  const t = dictionaries[lang] ?? dictionaries.vi
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center border-b border-border bg-card">
@@ -85,12 +85,12 @@ export function Topbar({ onSearchClick, onMenuClick }: TopbarProps) {
         <div className="hidden md:flex items-center gap-6 ml-auto">
           <nav className="flex items-center gap-6" aria-label="Main navigation">
             {topNavigation.map((item) => {
-              // Special case for Changelog: use root /changelog/[lang] instead of /tai-lieu/[lang]/...
+              // Special case for Changelog: use root /changelog/[lang] instead of /[lang]/...
               let href = item.href
               if (href.startsWith('/changelog')) {
                 href = `/changelog/${language}`
-              } else if (href.includes("/tai-lieu")) {
-                href = item.href.replace("/tai-lieu/vi", `/tai-lieu/${language}`)
+              } else if (href.includes("/vi") || href.includes("/en")) {
+                href = item.href.replace(/\/(vi|en)/, `/${language}`)
               }
               
               return (
@@ -153,8 +153,8 @@ export function Topbar({ onSearchClick, onMenuClick }: TopbarProps) {
                 let href = item.href
                 if (href.startsWith('/changelog')) {
                   href = `/changelog/${lang}`
-                } else if (href.includes("/tai-lieu")) {
-                  href = item.href.replace("/tai-lieu/vi", `/tai-lieu/${lang}`)
+                } else if (href.includes("/vi") || href.includes("/en")) {
+                  href = item.href.replace(/\/(vi|en)/, `/${lang}`)
                 }
                 
                 return (

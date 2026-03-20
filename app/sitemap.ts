@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const pages = await getAllDocPages(lang)
     for (const page of pages) {
       docRoutes.push({
-        url: `${baseUrl}/tai-lieu/${lang}/${page.slug}`,
+        url: `${baseUrl}/${lang}/${page.slug}`,
         lastModified: new Date(),
         changeFrequency: "weekly" as const,
         priority: 0.8,

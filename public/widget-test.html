@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Widget Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    p {
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Test Widget</h1>
+  <p>Xem góc dưới bên phải màn hình 👇</p>
+
+  <!-- === SMaxAI Chat Widget === -->
+  <script src="http://localhost:4000/sdk-dist/smaxai-chat.min.js?v=5"
+    onerror="console.error('SCRIPT onerror! src=', this.src);"
+    onload="console.log('SCRIPT LOADED! typeof SmaxAIChat =', typeof SmaxAIChat);"></script>
+  <script>
+    window.addEventListener('error', function (e) {
+      console.error('PAGE ERROR:', e.message, 'at', e.filename, 'line', e.lineno, 'col', e.colno);
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      console.error('UNHANDLED REJECTION:', e.reason && e.reason.message ? e.reason.message : e.reason);
+    });
+
+    if (typeof SmaxAIChat !== 'undefined' && typeof SmaxAIChat.init === 'function') {
+      console.log('SDK loaded OK, initializing...');
+      SmaxAIChat.init({ apiBaseUrl: 'http://localhost:4000', lang: 'vi' });
+      console.log('Init done. Widget:', SmaxAIChat.widget);
+    } else {
+      console.error('SmaxAI Chat: SDK failed to load. typeof SmaxAIChat =', typeof window.SmaxAIChat);
+      // Also check window keys
+      console.error('window.SmaxAIChat direct =', window.SmaxAIChat);
+      console.error('window keys containing Smax:', Object.keys(window).filter(k => k.toLowerCase().includes('smax')));
+    }
+  </script>
+  <!-- ============================= -->
+</body>
+
+</html>

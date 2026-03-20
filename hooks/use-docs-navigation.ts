@@ -22,7 +22,7 @@ interface DatabaseNavItem {
 function convertToNavSections(items: DatabaseNavItem[], lang: string): NavSection[] {
   const mapItem = (item: DatabaseNavItem): NavItem => ({
     title: item.title,
-    href: `/tai-lieu/${lang}/${item.slug}`,
+    href: `/${lang}/${item.slug}`,
     items: item.children && item.children.length > 0 
       ? item.children.map(mapItem) 
       : undefined,

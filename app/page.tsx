@@ -6,25 +6,25 @@ const heroCards = [
   {
     title: "Quickstart",
     description: "Deploy your first docs site in minutes with our step-by-step guide",
-    href: "/tai-lieu/vi/quickstart",
+    href: "/vi/quickstart",
     icon: Rocket,
   },
   {
     title: "CLI installation",
     description: "Install the CLI to preview and develop your docs locally",
-    href: "/tai-lieu/vi/cli",
+    href: "/vi/cli",
     icon: Terminal,
   },
   {
     title: "Web editor",
     description: "Edit your documentation directly in the browser",
-    href: "/tai-lieu/vi/web-editor",
+    href: "/vi/web-editor",
     icon: PenTool,
   },
   {
     title: "Components",
     description: "Explore our library of pre-built documentation components",
-    href: "/tai-lieu/vi/components",
+    href: "/vi/components",
     icon: Component,
   },
 ]

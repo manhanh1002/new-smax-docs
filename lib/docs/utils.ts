@@ -110,8 +110,8 @@ export function getPagerForDoc(slug: string) {
     flatten(section.items)
   })
 
-  // Normalize slug to ensure it starts with /tai-lieu/ if needed
-  const normalizedSlug = slug.startsWith("/tai-lieu/") ? slug : `/tai-lieu/${slug}`
+  // Normalize slug to ensure it starts with / if needed
+  const normalizedSlug = slug.startsWith("/") ? slug : `/${slug}`
   
   const activeIndex = flattenedLinks.findIndex(
     (link) => link.href === normalizedSlug

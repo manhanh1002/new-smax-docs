@@ -29,7 +29,7 @@ export function Sidebar({ onSearchClick, onAssistantClick }: SidebarProps) {
   const { language } = useLanguage()
   const params = useParams()
   const lang = (params?.lang as "vi" | "en") || language
-  const t = dictionaries[lang]
+  const t = dictionaries[lang] ?? dictionaries.vi
   
   // Fetch navigation from database
   const { navigation, isLoading } = useDocsNavigation(lang)
@@ -75,12 +75,9 @@ function SidebarItem({ item, level = 0, lang }: { item: NavItem; level?: number;
   
   // Dynamic href based on language - avoid double lang prefix
   let href = item.href
-  if (item.href.includes('/tai-lieu/')) {
+  if (item.href.includes('/vi') || item.href.includes('/en')) {
     // Already has language prefix, replace it
-    href = item.href.replace(/\/tai-lieu\/(vi|en)/, `/tai-lieu/${lang}`)
-  } else {
-    // No language prefix, add it
-    href = item.href.replace("/tai-lieu", `/tai-lieu/${lang}`)
+    href = item.href.replace(/\/(vi|en)/, `/${lang}`)
   }
 
   // Check if current item is active
@@ -90,7 +87,7 @@ function SidebarItem({ item, level = 0, lang }: { item: NavItem; level?: number;
   const hasActiveChild = (items?: NavItem[]): boolean => {
     if (!items) return false
     return items.some(i => {
-      const iHref = i.href.replace("/tai-lieu", `/tai-lieu/${lang}`)
+      const iHref = i.href.replace(/\/(vi|en)/, `/${lang}`)
       return iHref === pathname || hasActiveChild(i.items)
     })
   }

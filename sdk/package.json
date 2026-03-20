@@ -9,10 +9,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --format=iife --global-name=SmaxAIChat --outfile=dist/smaxai-chat.min.js",
+    "build": "esbuild src/index.ts --bundle --minify --format=iife --outfile=dist/smaxai-chat.min.js",
     "build:esm": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/smaxai-chat.esm.js",
     "build:all": "npm run build && npm run build:esm",
-    "dev": "esbuild src/index.ts --bundle --format=iife --global-name=SmaxAIChat --outfile=dist/smaxai-chat.js --watch"
+    "dev": "esbuild src/index.ts --bundle --format=iife --outfile=dist/smaxai-chat.js --watch"
   },
   "keywords": [
     "smaxai",

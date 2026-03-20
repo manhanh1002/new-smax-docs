@@ -51,7 +51,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
     setMounted(true)
   }, [])
 
-  const t = dictionaries[lang]
+  const t = dictionaries[lang] ?? dictionaries.vi
   const currentLang = languages.find((l) => l.code === lang) || languages[0]
 
   return (
@@ -175,19 +175,17 @@ function MobileSidebarItem({
   
   // Dynamic href based on language
   let href = item.href
-  if (item.href.includes('/tai-lieu/')) {
-    href = item.href.replace(/\/tai-lieu\/(vi|en)/, `/tai-lieu/${lang}`)
-  } else {
-    href = item.href.replace("/tai-lieu", `/tai-lieu/${lang}`)
+  if (item.href.includes('/vi') || item.href.includes('/en')) {
+    href = item.href.replace(/\/(vi|en)/, `/${lang}`)
   }
 
   // Check active state
   const isActive = pathname === href
-  
+
   const hasActiveChild = (items?: NavItem[]): boolean => {
     if (!items) return false
     return items.some(i => {
-      const iHref = i.href.replace("/tai-lieu", `/tai-lieu/${lang}`)
+      const iHref = i.href.replace(/\/(vi|en)/, `/${lang}`)
       return iHref === pathname || hasActiveChild(i.items)
     })
   }

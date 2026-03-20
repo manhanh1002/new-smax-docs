@@ -18,7 +18,7 @@ export default async function RatingsPage() {
 
   // Calculate overview stats from aggregated data
   const totalFeedbacks = ratings.reduce((acc, item) => acc + item.total, 0)
-  
+
   // Calculate weighted averages safely
   const totalHelpfulScore = ratings.reduce((acc, item) => acc + (item.helpfulSum || 0), 0)
   const totalHelpfulCount = ratings.reduce((acc, item) => acc + (item.helpfulCount || 0), 0)
@@ -27,12 +27,6 @@ export default async function RatingsPage() {
   const totalEasyScore = ratings.reduce((acc, item) => acc + (item.easySum || 0), 0)
   const totalEasyCount = ratings.reduce((acc, item) => acc + (item.easyCount || 0), 0)
   const avgEasy = totalEasyCount ? (totalEasyScore / totalEasyCount).toFixed(1) : "0.0"
-
-  // Calculate negative rate (score 1)
-  // We need to look at underlying counts, but here we only have aggregated sums in `ratings` list from getRatingStats
-  // For precise calc we might need raw data, but let's approximate or skip for now
-  // Or update getRatingStats to return counts of 1s, 2s, 3s per type. 
-  // Since we didn't update getRatingStats to return specific counts per score per type, we'll skip negative rate for now or use a placeholder.
 
   return (
     <div className="space-y-8">
@@ -104,7 +98,7 @@ export default async function RatingsPage() {
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium truncate max-w-[380px]" title={doc.title}>{doc.title}</span>
-                    <Link href={`/tai-lieu/vi/${doc.slug}`} target="_blank" className="text-xs text-muted-foreground hover:underline">
+                    <Link href={`/vi/${doc.slug}`} target="_blank" className="text-xs text-muted-foreground hover:underline">
                       {doc.slug}
                     </Link>
                   </div>

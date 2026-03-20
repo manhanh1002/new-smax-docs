@@ -46,7 +46,7 @@ async function getBreadcrumbs(doc: OutlineDocument, allDocs: OutlineDocument[], 
       const parentPage = mapOutlineToDocPage(parent, lang)
       breadcrumbs.unshift({
         title: parentPage.title,
-        href: `/tai-lieu/${lang}/${parentPage.slug}`
+        href: `/${lang}/${parentPage.slug}`
       })
       current = parent
     } else {
@@ -375,11 +375,11 @@ export async function getPagerForDocFromOutline(
     return {
       prev: prevDoc ? {
         title: prevDoc.title,
-        href: `/tai-lieu/${lang}/${prevDoc.slug}`,
+        href: `/${lang}/${prevDoc.slug}`,
       } : null,
       next: nextDoc ? {
         title: nextDoc.title,
-        href: `/tai-lieu/${lang}/${nextDoc.slug}`,
+        href: `/${lang}/${nextDoc.slug}`,
       } : null,
     }
   } catch (error) {

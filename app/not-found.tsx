@@ -13,7 +13,7 @@ export default function NotFound() {
         The page you&apos;re looking for doesn&apos;t exist or has been moved.
       </p>
       <Button asChild className="gap-2">
-        <Link href="/tai-lieu/vi">
+        <Link href="/vi">
           <Home className="h-4 w-4" />
           Back to Documentation
         </Link>

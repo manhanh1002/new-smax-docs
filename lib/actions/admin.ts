@@ -193,37 +193,239 @@ export async function getRatingStats() {
   return result
 }
 
+// --- DASHBOARD CHARTS DATA ---
+
+export type RatingTrendPoint = {
+  date: string
+  helpful: number
+  easy: number
+}
+
+export type TopDoc = {
+  slug: string
+  title: string
+  avgHelpful: number
+  avgEasy: number
+  totalRaters: number
+  totalRatings: number
+}
+
+export type FunnelStep = {
+  name: string
+  value: number
+  fill: string
+  _raw: number
+}
+
+export type InsightStat = {
+  totalEvents: number
+  totalRatings: number
+  avgHelpful: number
+  avgEasy: number
+  topDay: string
+  topDayCount: number
+  weekOverWeek: number // % change vs previous week
+}
+
+/**
+ * getRatingTrendData — Last 14 days of daily rating counts, split by type.
+ * Used by: RecentActivityChart (AreaChart)
+ */
+export async function getRatingTrendData(): Promise<RatingTrendPoint[]> {
+  const supabase = await getSupabase()
+  const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data } = await supabase
+    .from('doc_ratings')
+    .select('helpful_score, easy_score, created_at')
+    .gte('created_at', since)
+
+  const map: Record<string, RatingTrendPoint> = {}
+
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const key = d.toLocaleDateString('en-CA') // YYYY-MM-DD
+    map[key] = { date: key, helpful: 0, easy: 0 }
+  }
+
+  data?.forEach(row => {
+    const key = new Date(row.created_at).toLocaleDateString('en-CA')
+    if (!map[key]) return
+    if (row.helpful_score) map[key].helpful++
+    if (row.easy_score) map[key].easy++
+  })
+
+  return Object.values(map)
+}
+
+/**
+ * getTopRatedDocs — Top N docs by rating volume, with scores.
+ * Used by: PopularArticlesChart (HorizontalBarChart)
+ */
+export async function getTopRatedDocs(n = 5): Promise<TopDoc[]> {
+  const supabase = await getSupabase()
+
+  const { data: docs } = await supabase.from('documents').select('title, urlId')
+  const titleMap: Record<string, string> = {}
+  docs?.forEach(d => { titleMap[d.urlId] = d.title })
+
+  const { data } = await supabase
+    .from('doc_ratings')
+    .select('slug, helpful_score, easy_score')
+
+  const grouped: Record<string, {
+    slug: string
+    helpfulSum: number
+    helpfulCount: number
+    easySum: number
+    easyCount: number
+    total: number
+  }> = {}
+
+  data?.forEach(row => {
+    if (!grouped[row.slug]) {
+      grouped[row.slug] = { slug: row.slug, helpfulSum: 0, helpfulCount: 0, easySum: 0, easyCount: 0, total: 0 }
+    }
+    grouped[row.slug].total++
+    if (row.helpful_score) {
+      grouped[row.slug].helpfulSum += row.helpful_score
+      grouped[row.slug].helpfulCount++
+    }
+    if (row.easy_score) {
+      grouped[row.slug].easySum += row.easy_score
+      grouped[row.slug].easyCount++
+    }
+  })
+
+  return Object.values(grouped)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, n)
+    .map(item => ({
+      slug: item.slug,
+      title: titleMap[item.slug] || item.slug,
+      avgHelpful: item.helpfulCount ? +(item.helpfulSum / item.helpfulCount).toFixed(1) : 0,
+      avgEasy: item.easyCount ? +(item.easySum / item.easyCount).toFixed(1) : 0,
+      totalRaters: Math.max(item.helpfulCount, item.easyCount),
+      totalRatings: item.total,
+    }))
+}
+
+/**
+ * getEngagementFunnel — view_doc → copy → share → chat conversion funnel.
+ * Used by: EngagementFunnelChart
+ */
+export async function getEngagementFunnel(): Promise<FunnelStep[]> {
+  const supabase = await getSupabase()
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data } = await supabase
+    .from('analytics_events')
+    .select('event_type')
+    .gte('created_at', since)
+
+  const counts: Record<string, number> = {
+    view_doc: 0,
+    copy_page: 0,
+    share_page: 0,
+    ai_chat: 0,
+  }
+  data?.forEach(row => {
+    if (row.event_type in counts) counts[row.event_type]++
+  })
+
+  const max = Math.max(...Object.values(counts), 1)
+
+  return [
+    { key: 'view_doc',  name: 'Xem bài viết',  value: counts.view_doc,  fill: '#8884d8' },
+    { key: 'copy_page', name: 'Copy nội dung', value: counts.copy_page, fill: '#82ca9d' },
+    { key: 'share_page', name: 'Chia sẻ',     value: counts.share_page, fill: '#ffc658' },
+    { key: 'ai_chat',  name: 'Chat AI',       value: counts.ai_chat,   fill: '#ff8042' },
+  ].map(step => ({
+    name: step.name,
+    value: max > 0 ? Math.round((step.value / max) * 100) : 0,
+    fill: step.fill,
+    _raw: counts[step.key as keyof typeof counts] ?? 0,
+  }))
+}
+
+/**
+ * getInsightsStats — Summary stats for the Insights page.
+ * Includes week-over-week delta.
+ */
+export async function getInsightsStats(): Promise<InsightStat> {
+  const supabase = await getSupabase()
+  const now = Date.now()
+  const ms30 = 30 * 24 * 60 * 60 * 1000
+  const ms14 = 14 * 24 * 60 * 60 * 1000
+  const ms7  = 7  * 24 * 60 * 60 * 1000
+
+  const [events30, events14, events7, ratings30] = await Promise.all([
+    supabase.from('analytics_events').select('event_type, created_at').gte('created_at', new Date(now - ms30).toISOString()),
+    supabase.from('analytics_events').select('event_type, created_at').gte('created_at', new Date(now - ms14).toISOString()),
+    supabase.from('analytics_events').select('event_type, created_at').gte('created_at', new Date(now - ms7).toISOString()),
+    supabase.from('doc_ratings').select('helpful_score, easy_score, created_at').gte('created_at', new Date(now - ms30).toISOString()),
+  ])
+
+  // Week-over-week: compare last-7 vs prior-7 days
+  const weekThis = (events7.data?.length) || 0
+  const weekPrior = ((events14.data?.length) || 0) - weekThis
+  const wow = weekPrior > 0 ? Math.round(((weekThis - weekPrior) / weekPrior) * 100) : 0
+
+  // Top day
+  const dayCount: Record<string, number> = {}
+  events30.data?.forEach(e => {
+    const d = new Date(e.created_at).toLocaleDateString('en-CA')
+    dayCount[d] = (dayCount[d] || 0) + 1
+  })
+  const topDay = Object.entries(dayCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+
+  // Avg scores
+  const allRatings = ratings30?.data ?? []
+  const hCount = allRatings.filter((r: any) => r.helpful_score).length
+  const hSum   = allRatings.filter((r: any) => r.helpful_score).reduce((s: number, r: any) => s + r.helpful_score, 0)
+  const eCount = allRatings.filter((r: any) => r.easy_score).length
+  const eSum   = allRatings.filter((r: any) => r.easy_score).reduce((s: number, r: any) => s + r.easy_score, 0)
+
+  return {
+    totalEvents: (events30.data?.length) || 0,
+    totalRatings: allRatings.length || 0,
+    avgHelpful: hCount ? +(hSum / hCount).toFixed(1) : 0,
+    avgEasy: eCount ? +(eSum / eCount).toFixed(1) : 0,
+    topDay,
+    topDayCount: dayCount[topDay] || 0,
+    weekOverWeek: wow,
+  }
+}
+
+// --- ANALYTICS DATA ---
+
 export async function getAnalyticsData() {
   const supabase = await getSupabase()
 
-  // 1. Event Type Distribution
   const { data: allEvents } = await supabase
     .from('analytics_events')
     .select('event_type, created_at')
-    .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
+    .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
 
-  // Group by date and type for charts
-  // Format: { date: '2023-10-01', ai_chat: 10, copy_page: 5, share_page: 2 }
-  
-  const chartDataMap: any = {}
-  
+  const chartDataMap: Record<string, { date: string; ai_chat: number; copy_page: number; share_page: number; view_doc: number }> = {}
+
   allEvents?.forEach(event => {
-    const date = new Date(event.created_at).toLocaleDateString('en-CA') // YYYY-MM-DD
+    const date = new Date(event.created_at).toLocaleDateString('en-CA')
     if (!chartDataMap[date]) {
       chartDataMap[date] = { date, ai_chat: 0, copy_page: 0, share_page: 0, view_doc: 0 }
     }
     if (chartDataMap[date][event.event_type] !== undefined) {
-      chartDataMap[date][event.event_type] += 1
+      chartDataMap[date][event.event_type]++
     }
   })
 
-  const chartData = Object.values(chartDataMap).sort((a: any, b: any) => a.date.localeCompare(b.date))
+  const chartData = Object.values(chartDataMap).sort((a, b) => a.date.localeCompare(b.date))
 
-  // Summary by type
-  const summary = allEvents?.reduce((acc: any, curr) => {
+  const summary = allEvents?.reduce((acc, curr) => {
     acc[curr.event_type] = (acc[curr.event_type] || 0) + 1
     return acc
-  }, { ai_chat: 0, copy_page: 0, share_page: 0, view_doc: 0 })
+  }, { ai_chat: 0, copy_page: 0, share_page: 0, view_doc: 0 }) ?? { ai_chat: 0, copy_page: 0, share_page: 0, view_doc: 0 }
 
   return { chartData, summary }
 }

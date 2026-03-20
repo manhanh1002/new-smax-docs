@@ -35,7 +35,7 @@ export default function LoginPage() {
         toast.error(error.message)
       } else {
         toast.success('Logged in successfully')
-        router.push('/tai-lieu/admin')
+        router.push('/admin')
         router.refresh()
       }
     } catch (error) {

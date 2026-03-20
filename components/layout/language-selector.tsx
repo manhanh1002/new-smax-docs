@@ -22,9 +22,9 @@ export function LanguageSelector() {
   const handleLanguageChange = (code: "vi" | "en") => {
     setLanguage(code)
     // Replace language segment in URL
-    // Assumption: URL structure is /tai-lieu/[lang]/...
-    if (pathname.includes("/tai-lieu/")) {
-      const newPath = pathname.replace(/\/tai-lieu\/[a-z]{2}/, `/tai-lieu/${code}`)
+    // Replace language segment in URL
+    if (pathname.match(/\/(vi|en)/)) {
+      const newPath = pathname.replace(/\/(vi|en)/, `/${code}`)
       router.push(newPath)
     }
   }
