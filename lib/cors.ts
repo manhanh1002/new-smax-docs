@@ -10,6 +10,8 @@ export const ALLOWED_ORIGINS = [
   'https://biz.smax.ai',
   'https://admin.smax.ai',
   'https://cdp.vn',
+  'https://smaxai.cdp.vn',
+  'https://docs.cdp.vn',
   'https://bot.vn',
   'https://tailieu.smax.ai',
   'http://localhost:3000',
@@ -24,7 +26,11 @@ export function corsHeaders(origin: string | null): Record<string, string> {
   }
 
   // Restrict to allowed origins
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.smax.ai'))) {
+  if (origin && (
+    ALLOWED_ORIGINS.includes(origin) || 
+    origin.endsWith('.smax.ai') || 
+    origin.endsWith('.cdp.vn')
+  )) {
     headers['Access-Control-Allow-Origin'] = origin
     headers['Access-Control-Allow-Credentials'] = 'true'
   }

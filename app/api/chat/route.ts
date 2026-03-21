@@ -366,7 +366,11 @@ async function verifyAccess(req: NextRequest) {
   const apiKeyHeader = req.headers.get('x-api-key')
 
   // 1. If it's a browser request from an allowed origin, bypass key check (CORS already handles security)
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.smax.ai'))) {
+  if (origin && (
+    ALLOWED_ORIGINS.includes(origin) || 
+    origin.endsWith('.smax.ai') || 
+    origin.endsWith('.cdp.vn')
+  )) {
     return true
   }
 
