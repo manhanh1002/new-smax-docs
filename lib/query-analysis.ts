@@ -15,6 +15,7 @@ export type QueryIntent =
   | 'comparison'         // So sánh
   | 'troubleshooting'    // Khắc phục sự cố
   | 'greeting'           // Chào hỏi
+  | 'off_topic'          // Ngoài phạm vi (chính trị, đời sống, v.v.)
   | 'general'            // Câu hỏi chung
 
 export interface QueryAnalysis {
@@ -156,6 +157,21 @@ const INTENT_KEYWORDS: Record<QueryIntent, string[]> = {
     'xin chào', 'hello', 'chào', 'hey', 'good morning', 'good afternoon',
     'hi there', 'hi all'
   ],
+  off_topic: [
+    // Chính trị & Tôn giáo
+    'chính trị', 'đảng', 'nhà nước', 'chính phủ', 'bầu cử', 'tôn giáo', 'đạo', 'phật', 'chúa',
+    'politics', 'government', 'religion', 'god', 'buddha',
+    // Đời sống & Cá nhân
+    'ăn gì', 'đi đâu', 'thời tiết', 'bóng đá', 'thể thao', 'người yêu', 'tình cảm', 'tâm sự',
+    'thất tình', 'giàu nghèo', 'tiền bạc', 'vàng', 'chứng khoán', 'cổ phiếu',
+    'weather', 'football', 'sports', 'love', 'money', 'stock', 'gold',
+    // Kiến thức phổ thông không liên quan
+    'thế giới', 'lịch sử', 'địa lý', 'toán học', 'vật lý', 'hóa học',
+    'history', 'geography', 'math', 'physics', 'chemistry',
+    // Câu hỏi triết học/vô định
+    'ý nghĩa cuộc sống', 'tại sao', 'làm sao để hạnh phúc',
+    'meaning of life', 'how to be happy'
+  ],
   general: []
 }
 
@@ -234,9 +250,16 @@ export function classifyIntent(query: string): QueryIntent {
     }
   }
   
+  // Check off-topic next (critical shield)
+  for (const keyword of INTENT_KEYWORDS.off_topic) {
+    if (lowerQuery.includes(keyword)) {
+      return 'off_topic'
+    }
+  }
+
   // Check other intents
   for (const [intent, keywords] of Object.entries(INTENT_KEYWORDS)) {
-    if (intent === 'greeting' || intent === 'general') continue
+    if (intent === 'greeting' || intent === 'off_topic' || intent === 'general') continue
     
     for (const keyword of keywords) {
       if (lowerQuery.includes(keyword)) {
@@ -245,6 +268,20 @@ export function classifyIntent(query: string): QueryIntent {
     }
   }
   
+  // Final heuristic check: if not a greeting/intent and mentions NO software keywords, it might be off-topic
+  const mentionsSoftware = [
+    ...CHANNEL_KEYWORDS, 
+    ...FEATURE_KEYWORDS, 
+    'smax', 'bot', 'phần mềm', 'tài khoản', 'kết nối', 'cài đặt'
+  ].some(kw => lowerQuery.includes(kw))
+
+  if (!mentionsSoftware && lowerQuery.length > 20) {
+    // Longer queries with no software keywords are likely off-topic
+    // but we'll mark as general for now and let the prompt handle strictness
+    // unless we are very sure.
+    // For now, let's stick to explicit keyword off_topic to avoid false positives.
+  }
+
   return 'general'
 }
 
@@ -410,9 +447,11 @@ export function getSearchParams(intent: QueryIntent, isComplex: boolean): {
     case 'troubleshooting':
       return { matchCount: 10, threshold: 0.15 }
     case 'feature_inquiry':
-      return { matchCount: isComplex ? 15 : 10, threshold: 0.1 }
+      return { matchCount: isComplex ? 20 : 12, threshold: 0.08 } // Slightly lower threshold for better recall
+    case 'off_topic':
+      return { matchCount: 5, threshold: 0.3 } // High threshold for off-topic to minimize accidental context
     default:
-      return { matchCount: 10, threshold: 0.1 }
+      return { matchCount: isComplex ? 15 : 10, threshold: 0.1 }
   }
 }
 
@@ -490,6 +529,13 @@ export function getIntentPrompt(intent: QueryIntent): string {
 - Mô tả ngắn gọn mỗi tính năng
 - Nêu trường hợp sử dụng phù hợp
 - Link đến hướng dẫn chi tiết
+`
+    case 'off_topic':
+      return `
+# QUAN TRỌNG - PHẠM VI HỖ TRỢ:
+- Câu hỏi này nằm ngoài phạm vi hỗ trợ của SmaxAI (đời sống, chính trị, kiến thức chung, v.v.).
+- KHÔNG ĐƯỢC trả lời nội dung câu hỏi.
+- HÃY từ chối khéo léo: "Dạ, là trợ lý chuyên biệt cho SmaxAI, mình chỉ có thể hỗ trợ các vấn đề liên quan đến nền tảng và kỹ thuật của phần mềm thôi ạ. Bạn có câu hỏi nào về SmaxAI không, mình sẵn sàng giải đáp nè!"
 `
     default:
       return ''

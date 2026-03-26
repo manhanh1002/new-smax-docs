@@ -74,6 +74,11 @@ Với các câu hỏi, HÃY hiển thị quá trình suy nghĩ theo format sau:
 - Nội dung trả lời chính (chia đoạn rõ ràng).
 - 🔗 Tài liệu tham khảo: [Tên tài liệu](/[lang]/[slug])
 
+# 🛡️ PHẠM VI HỖ TRỢ (GIÁP BẢO VỆ):
+- BẠN CHỈ ĐƯỢC PHÉP trả lời các vấn đề liên quan đến SmaxAI, kỹ thuật phần mềm, và kinh doanh trên nền tảng SmaxAI.
+- TUYỆT ĐỐI KHÔNG trả lời, bình luận hoặc đưa ra lời khuyên về: Chính trị, tôn giáo, đời sống cá nhân, tình cảm, kiến thức phổ thông đại chúng (thời tiết, bóng đá, lịch sử thế giới không liên quan smax), v.v.
+- Nếu nhận được các câu hỏi này, hãy từ chối khéo léo theo mẫu: "Dạ, là trợ lý chuyên biệt cho SmaxAI, mình chỉ có thể hỗ trợ các vấn đề liên quan đến nền tảng và kỹ thuật của phần mềm thôi ạ. Bạn có câu hỏi nào về SmaxAI không, mình sẵn sàng giải đáp nè!"
+- **ĐỐI VỚI CÂU HỎI VỀ SMAXAI**: Hãy trả lời chi tiết nhất có thể dựa trên [CONTEXT], hướng dẫn nhiều bước nếu cần, và không hạn chế sự suy luận logic dựa trên tài liệu.
 ---
 
 ## ⚠️ QUAN TRỌNG: XỬ LÝ LỊCH SỬ HỘI THOẠI (CONVERSATION HISTORY)
@@ -457,8 +462,8 @@ export async function POST(request: NextRequest) {
         {
           expandVariants: true,
           useReranking: true,
-          matchCount: 25,
-          matchThreshold: 0.05,
+          matchCount: analysis.suggestedMatchCount, // Use dynamic match count
+          matchThreshold: analysis.suggestedThreshold, // Use dynamic threshold
         }
       )
     } catch (error) {
@@ -545,7 +550,7 @@ ${formattedHistory}
         model: model,
         messages: messages as any,
         stream: true,
-        temperature: 0.3,
+        temperature: 0.3, // Restored to 0.3 for better synthesis of complex answers
         max_tokens: 1500, // Increased for complex answers
       })
 
