@@ -50,6 +50,8 @@ export const dictionaries = {
       placeholder: "Đặt câu hỏi...",
       clearConfirm: "Bạn có chắc muốn xóa toàn bộ lịch sử chat?",
       clearHistory: "Xóa lịch sử chat",
+      cancel: "Hủy",
+      clear: "Xóa",
     },
   },
   en: {
@@ -103,6 +105,8 @@ export const dictionaries = {
       placeholder: "Ask a question...",
       clearConfirm: "Are you sure you want to clear all chat history?",
       clearHistory: "Clear chat history",
+      cancel: "Cancel",
+      clear: "Clear",
     },
   },
 }

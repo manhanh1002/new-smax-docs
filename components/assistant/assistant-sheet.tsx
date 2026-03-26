@@ -12,6 +12,17 @@ import { useLanguage } from "@/lib/context/language-context"
 import { dictionaries } from "@/lib/i18n/dictionaries"
 import { trackAIChat as trackGA } from "@/lib/google-analytics"
 import { trackAnalyticsEvent } from "@/lib/actions/admin"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 // Helper to parse thinking from response
 function parseThinkingResponse(content: string): { thinking: string; answer: string } {
@@ -186,10 +197,11 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
   }
 
   const handleClearChat = () => {
-    if (confirm(t.assistant.clearConfirm || 'Bạn có chắc muốn xóa toàn bộ lịch sử chat?')) {
-      clearMessages()
-    }
+    clearMessages()
+    setIsClearDialogOpen(false)
   }
+
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
 
   // Don't render until loaded from localStorage
   if (!isLoaded) return null
@@ -207,15 +219,35 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
           </div>
           <div className="flex items-center gap-1">
             {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={handleClearChat}
-                title={t.assistant.clearHistory || "Xóa lịch sử chat"}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <AlertDialog open={isClearDialogOpen} onOpenChange={setIsClearDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    title={t.assistant.clearHistory || "Xóa lịch sử chat"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t.assistant.clearHistory || "Xóa lịch sử chat"}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t.assistant.clearConfirm || 'Bạn có chắc muốn xóa toàn bộ lịch sử chat?'}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t.assistant.cancel || "Hủy"}</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleClearChat}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {t.assistant.clear || "Xóa"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
             <Button
               variant="ghost"

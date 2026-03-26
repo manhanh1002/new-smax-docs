@@ -6,6 +6,19 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { MarkdownRenderer } from "@/components/docs/markdown-renderer"
 import { useChatHistory } from "@/hooks/use-chat-history"
+import { useLanguage } from "@/lib/context/language-context"
+import { dictionaries } from "@/lib/i18n/dictionaries"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export function AssistantDock() {
   const [query, setQuery] = useState("")
@@ -15,6 +28,9 @@ export function AssistantDock() {
   const [isExpanded, setIsExpanded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messageIdCounter = useRef(0) // Will be initialized in useEffect
+  const { language } = useLanguage()
+  const t = dictionaries[language]
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
 
   // Use the chat history hook for localStorage persistence
   const { 
@@ -139,10 +155,9 @@ export function AssistantDock() {
   }
 
   const handleClearChat = () => {
-    if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử chat?')) {
-      clearMessages()
-      setIsExpanded(false)
-    }
+    clearMessages()
+    setIsExpanded(false)
+    setIsClearDialogOpen(false)
   }
 
   if (!isVisible) return null
@@ -167,15 +182,35 @@ export function AssistantDock() {
             </div>
             <div className="flex items-center gap-1">
               {messages.length > 0 && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  onClick={handleClearChat}
-                  title="Xóa lịch sử chat"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <AlertDialog open={isClearDialogOpen} onOpenChange={setIsClearDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      title={t.assistant.clearHistory || "Xóa lịch sử chat"}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t.assistant.clearHistory || "Xóa lịch sử chat"}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t.assistant.clearConfirm || 'Bạn có chắc muốn xóa toàn bộ lịch sử chat?'}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{t.assistant.cancel || "Hủy"}</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleClearChat}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {t.assistant.clear || "Xóa"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsExpanded(false)}>
                 <X className="h-4 w-4" />
