@@ -38,9 +38,9 @@ Content-Type: application/json
 ```
 
 **Request body:**
-```typescript
 interface ChatRequest {
   query: string          // required — the user's question
+  model?: string         // optional — allow overriding the AI model (e.g. 'model-router', 'gpt-4o-mini')
   lang?: 'vi' | 'en'     // optional, default: 'vi'
   history?: Array<{      // optional — conversation history
     role: 'user' | 'assistant'
@@ -48,6 +48,12 @@ interface ChatRequest {
   }>
 }
 ```
+
+**Model Selection Logic (Smart Routing):**
+The API automatically selects the best model if none is provided:
+1. **Browser/Widget Requests**: If the request comes from a recognized origin (e.g., `smax.ai`, `cdp.vn`), it defaults to the system's standard chat model (configured via `CHAT_MODEL` env, typically `gpt-5-chat`).
+2. **Direct API Requests**: If the request is a direct API call (e.g., via `x-api-key` in Postman/Curl), it defaults to `model-router` for advanced dynamic routing.
+3. **Explicit Override**: Providing the `model` field in the request body overrides both defaults.
 
 **Success response — HTTP 200, streaming `text/plain; charset=utf-8`:**
 - SSE-like plain text stream; each chunk is a raw LLM text token.

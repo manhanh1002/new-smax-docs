@@ -154,9 +154,12 @@ $$;
 ### 4.3. Chat API: `/api/chat`
 *   **Method**: `POST`
 *   **Logic**:
-    1.  Nhận `messages` và `lang` (ngôn ngữ hiện tại của user) từ Client.
-    2.  Lấy message cuối cùng của user.
-    3.  Tạo embedding cho message đó.
+    1.  Nhận `query`, `model` (optional), `lang` và `history` từ Client.
+    2.  **Xác định Model**:
+        *   Nếu `model` được truyền trong body: Sử dụng model đó (Override).
+        *   Nếu là Browser request (Origin hợp lệ): Sử dụng `gpt-5-chat`.
+        *   Nếu là Direct API request: Sử dụng `model-router`.
+    3.  Tạo embedding cho `query`.
     4.  Gọi RPC `match_documents(embedding, 0.5, 5, lang)` để tìm context liên quan.
     5.  Xây dựng System Prompt:
         ```text
@@ -166,7 +169,7 @@ $$;
         Context:
         {context_content}
         ```
-    6.  Gửi request tới OpenAI (GPT-4o hoặc GPT-3.5-turbo).
+    6.  Gửi request tới OpenAI/Token.ai với model đã xác định ở Bước 2.
     7.  Stream câu trả lời về Client.
 
 ---

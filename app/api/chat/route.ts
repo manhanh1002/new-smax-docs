@@ -138,6 +138,7 @@ Bạn muốn mình đi sâu vào phần nào?"
 
 interface ChatRequest {
   query: string
+  model?: string // Allow overriding the model
   lang?: 'vi' | 'en'
   history?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
@@ -412,7 +413,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: ChatRequest = await request.json()
-    const { query, lang = 'vi', history = [] } = body
+    const { query, model: requestedModel, lang = 'vi', history = [] } = body
 
     if (!query || query.trim().length === 0) {
       return new Response(JSON.stringify({ error: 'Query is required' }), {
@@ -528,7 +529,18 @@ ${formattedHistory}
     const fullSystemPrompt = `${RAG_SYSTEM_PROMPT}\n${intentPrompt}\n${historyContext}\nCONTEXT:\n${context}`
 
     // Step 4: Stream text using OpenAI SDK directly
-    const model = process.env.CHAT_MODEL || 'gpt-4o-mini'
+    // Step 4: Stream text using OpenAI SDK directly
+    // Determine model based on request source (Web/Embed vs Direct API) or explicit override
+    const isBrowserRequest = origin && (
+      ALLOWED_ORIGINS.includes(origin) || 
+      origin.endsWith('.smax.ai') || 
+      origin.endsWith('.cdp.vn')
+    )
+    
+    // Priority: Explicitly requested model > Browser/Widget default > Direct API default
+    const model = requestedModel || (isBrowserRequest ? (process.env.CHAT_MODEL || 'gpt-5-chat') : 'model-router')
+    
+    console.log(`[Chat] Request from ${isBrowserRequest ? 'Browser/Widget' : 'Direct API'}. Using model: ${model} ${requestedModel ? '(overridden by body)' : ''}`)
     
     // Prepare messages for OpenAI
     // Note: We include history in system prompt for better context understanding

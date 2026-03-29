@@ -75,6 +75,7 @@ export default function ApiDocsPage() {
               <div className="bg-[#0f172a] rounded-xl p-4 text-slate-100 text-xs font-mono overflow-x-auto leading-relaxed">
                 <pre>{`{
   "query": "Làm thế nào để kết nối Zalo?", // (Bắt buộc) Câu hỏi của người dùng
+  "model": "model-router",              // (Tùy chọn) 'gpt-5-chat' hoặc 'model-router'
   "lang": "vi",                          // (Tùy chọn) 'vi' hoặc 'en'
   "history": [                           // (Tùy chọn) Lịch sử hội thoại để AI nhớ ngữ cảnh
     { "role": "user", "content": "Chào bạn" },
@@ -82,6 +83,18 @@ export default function ApiDocsPage() {
   ]
 }`}</pre>
               </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-sm">Cơ chế chọn Model (Smart Routing)</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Hệ thống tự động điều hướng model để tối ưu hóa hiệu năng và chi phí:
+              </p>
+              <ul className="text-xs space-y-2 text-muted-foreground list-disc list-inside bg-muted/30 p-4 rounded-lg">
+                <li><b className="text-foreground">Yêu cầu từ Browser/Widget:</b> Mặc định dùng <code className="bg-muted px-1 rounded text-primary">gpt-5-chat</code> để đảm bảo tốc độ ổn định.</li>
+                <li><b className="text-foreground">Yêu cầu từ API trực tiếp:</b> Mặc định dùng <code className="bg-muted px-1 rounded text-primary">model-router</code> để tận dụng khả năng định tuyến thông minh.</li>
+                <li><b className="text-foreground">Ghi đè chủ động:</b> Bạn có thể truyền thuộc tính <code className="bg-muted px-1 rounded text-primary">model</code> trong body để chọn model mong muốn.</li>
+              </ul>
             </div>
 
             <div className="space-y-4">
