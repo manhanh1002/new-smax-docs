@@ -42,16 +42,30 @@ export default function EmbedCodePage() {
   const sdkScriptSrc = `${apiBaseUrl}/sdk-dist/smaxai-chat.min.js`
   
   const embedCodeMap: Record<string, string> = useMemo(() => ({
-    script: `<!-- SmaxAI Chat Widget -->
+    script: `<!-- SmaxAI Chat Widget (Auto-init) -->
+<script 
+  src="${sdkScriptSrc}" 
+  data-auto-init 
+  data-api-base-url="${apiBaseUrl}"
+  data-lang="${lang}"
+  async
+></script>
+
+<!-- Optional: Manual Control (if needed) -->
+<!--
 <script src="${sdkScriptSrc}"></script>
 <script>
-  if (typeof SmaxAIChat !== 'undefined') {
-    SmaxAIChat.init({
-      apiBaseUrl: '${apiBaseUrl}',
-      lang: '${lang}'
-    });
-  }
-</script>`,
+  window.addEventListener('load', function() {
+    if (typeof SmaxAIChat !== 'undefined') {
+      SmaxAIChat.init({
+        apiBaseUrl: '${apiBaseUrl}',
+        lang: '${lang}'
+      });
+    }
+  });
+</script>
+-->`,
+
     sdk: `// Cài đặt SDK hoặc import trực tiếp
 // import { SmaxAIChat } from '@smaxai/chat-sdk';
 

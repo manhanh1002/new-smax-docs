@@ -1,50 +1,352 @@
-function p(l){let t=document.createElement("div");return t.textContent=l,t.innerHTML}function h(l){return l=l.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>"),l=l.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g,"<em>$1</em>"),l=l.replace(/`([^`]+)`/g,'<code class="smaxai-inline-code">$1</code>'),l=l.replace(/\[([^\]]+)\]\(([^)]+)\)/g,(t,d,e)=>{let n=e.startsWith("http")?' target="_blank" rel="noopener noreferrer"':"";return`<a class="smaxai-md-link" href="${e}"${n}>${d}</a>`}),l}function u(l){if(!l)return"";let t=l.split(`
-`),d=[],e=0;for(;e<t.length;){let n=t[e];if(n.trim()===""){e++;continue}let c=n.match(/^:::(info|warning|tip|danger|note|success)(?:\s+\[([^\]]*)\])?\s*$/);if(c){let i=[];for(e++;e<t.length&&!t[e].startsWith(":::");)i.push(t[e]),e++;let o=c[1]==="warning"||c[1]==="danger"?"&#9888;":c[1]==="tip"||c[1]==="success"?"&#10003;":"&#8505;";d.push(`<div class="smaxai-md-callout smaxai-md-callout-${c[1]}"><span class="smaxai-md-callout-icon">${o}</span><div class="smaxai-md-callout-body">`+(c[2]?`<div class="smaxai-md-callout-title">${p(c[2])}</div>`:"")+`<div class="smaxai-md-callout-content">${u(i.join(`
-`))}</div></div></div>`),e++;continue}let a=n.match(/^(#{1,4})\s+(.+)$/);if(a){d.push(`<h${a[1].length} class="smaxai-md-h${a[1].length}">${h(p(a[2].trim()))}</h${a[1].length}>`),e++;continue}if(n.startsWith("```")){let i=n.slice(3).trim(),o=[];for(e++;e<t.length&&!t[e].startsWith("```");)o.push(t[e]),e++;d.push('<div class="smaxai-md-code-block">'+(i?`<div class="smaxai-md-code-lang">${p(i)}</div>`:"")+`<pre class="smaxai-md-pre"><code>${p(o.join(`
-`))}</code></pre></div>`),e++;continue}if(/^(-{3,}|\*{3,})\s*$/.test(n.trim())||n.trim()==="---"||n.trim()==="***"){d.push('<hr class="smaxai-md-hr">'),e++;continue}if(n.startsWith("> ")){let i=[];for(;e<t.length&&(t[e].startsWith("> ")||t[e].trim()==="");)t[e].startsWith("> ")&&i.push(t[e].slice(2)),e++;d.push(`<blockquote class="smaxai-md-blockquote">${u(i.join(`
-`))}</blockquote>`);continue}if(/^[-*+]\s/.test(n)){let i=[];for(;e<t.length&&/^[-*+]\s/.test(t[e]);)i.push(t[e].replace(/^[-*+]\s/,"")),e++;d.push(`<ul class="smaxai-md-ul">${i.map(o=>`<li>${h(p(o))}</li>`).join("")}</ul>`);continue}if(/^\d+\.\s/.test(n)){let i=[];for(;e<t.length&&/^\d+\.\s/.test(t[e]);)i.push(t[e].replace(/^\d+\.\s/,"")),e++;d.push(`<ol class="smaxai-md-ol">${i.map(o=>`<li>${h(p(o))}</li>`).join("")}</ol>`);continue}let s=n.match(/^!\[([^\]]*)\]\(([^)]+)\)\s*$/);if(s){d.push(`<div class="smaxai-md-img-wrap"><img class="smaxai-md-img" src="${s[2]}" alt="${p(s[1])}" loading="lazy">${s[1]?`<div class="smaxai-md-img-caption">${p(s[1])}</div>`:""}</div>`),e++;continue}if(n.includes("|")&&e+1<t.length&&t[e+1].match(/^\|?[\s\-:|]+\|?$/)){let i=[];for(;e<t.length&&t[e].includes("|");)i.push(t[e]),e++;let o=i.filter(r=>!r.match(/^\|?[\s\-:|]+\|?$/)).map(r=>r.split("|").map(m=>m.trim()).filter((m,x)=>x>0&&x<r.split("|").length-1));if(o.length>0){let r=o[0].map(x=>`<th>${h(p(x))}</th>`).join(""),m=o.slice(1).map(x=>`<tr>${x.map(f=>`<td>${h(p(f))}</td>`).join("")}</tr>`).join("");d.push(`<div class="smaxai-md-table-wrap"><table class="smaxai-md-table"><thead><tr>${r}</tr></thead><tbody>${m}</tbody></table></div>`)}continue}d.push(`<p class="smaxai-md-p">${h(p(n))}</p>`),e++}return d.join("")}(function(){async function l(){let c="smaxai_user_id",a=localStorage.getItem(c);if(a)return a;let s={userAgent:navigator.userAgent,language:navigator.language,platform:navigator.platform,screenResolution:`${screen.width}x${screen.height}`,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,colorDepth:screen.colorDepth};"deviceMemory"in navigator&&(s.deviceMemory=navigator.deviceMemory),"hardwareConcurrency"in navigator&&(s.hardwareConcurrency=navigator.hardwareConcurrency);let i=new TextEncoder().encode(JSON.stringify(s)),o=await crypto.subtle.digest("SHA-256",i),r=Array.from(new Uint8Array(o)).map(m=>m.toString(16).padStart(2,"0")).join("").substring(0,32);return localStorage.setItem(c,r),r}function t(){localStorage.removeItem("smaxai_user_id")}let d={apiBaseUrl:"https://docs.cdp.vn",lang:"vi",onOpen:()=>{},onClose:()=>{}};class e{constructor(a={}){this.container=null;this.isOpen=!1;this.messages=[];this.userId=null;this.isLoading=!1;this.idCounter=0;this.config={...d,...a},this.createUI(),this.init()}async init(){try{this.userId=await l(),await this.loadHistory(),this.messages.length>0&&this.renderMessages()}catch(a){console.error("SmaxAI Chat: Init error:",a)}}async loadHistory(){if(this.userId)try{let s=await(await fetch(`${this.config.apiBaseUrl}/api/chat/session?user_id=${this.userId}`)).json();s.success&&s.session?.messages&&(this.messages=s.session.messages)}catch(a){console.error("Failed to load history:",a)}}async saveHistory(){if(this.userId)try{await fetch(`${this.config.apiBaseUrl}/api/chat/session`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:this.userId,messages:this.messages})})}catch(a){console.error("Failed to save history:",a)}}createUI(){this.container=document.createElement("div"),this.container.id="smaxai-chat-widget",this.container.innerHTML=this.getHTML(),this.injectStyles(),document.body.appendChild(this.container),this.bindEvents()}getHTML(){return`<div class="smaxai-widget">
+async function M(){let t={userAgent:navigator.userAgent,language:navigator.language,platform:navigator.platform,screenResolution:`${screen.width}x${screen.height}`,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,colorDepth:screen.colorDepth};return"deviceMemory"in navigator&&(t.deviceMemory=navigator.deviceMemory),"hardwareConcurrency"in navigator&&(t.hardwareConcurrency=navigator.hardwareConcurrency),t}async function L(t){let a=JSON.stringify(t),i=new TextEncoder().encode(a),d=await crypto.subtle.digest("SHA-256",i);return Array.from(new Uint8Array(d)).map(m=>m.toString(16).padStart(2,"0")).join("").substring(0,32)}async function v(){let t="smaxai_user_id",a=localStorage.getItem(t);if(a)return a;let n=await M(),i=await L(n);return localStorage.setItem(t,i),i}function w(){localStorage.removeItem("smaxai_user_id")}var I={apiBaseUrl:"https://docs.cdp.vn",lang:"vi",onOpen:()=>{},onClose:()=>{}};function x(t){let a=document.createElement("div");return a.textContent=t,a.innerHTML}function h(t){return t=t.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>"),t=t.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g,"<em>$1</em>"),t=t.replace(/`([^`]+)`/g,'<code class="smaxai-inline-code">$1</code>'),t=t.replace(/\[([^\]]+)\]\(([^)]+)\)/g,(a,n,i)=>{let d=i.startsWith("http")?' target="_blank" rel="noopener noreferrer"':"";return`<a class="smaxai-md-link" href="${i}"${d}>${n}</a>`}),t}function y(t){if(!t)return"";let a=t.match(/\[THINKING\]([\s\S]*?)(?:\[\/THINKING\]|$)/i),n="";if(a){let r=a[1].trim(),m=t.match(/\[\/THINKING\]/i),c="";r&&(c=r.split(`
+`).map(l=>`<p class="smaxai-md-p smaxai-md-thinking-text">${h(x(l))}</p>`).join("")),n=`
+      <details class="smaxai-md-thinking">
+        <summary class="smaxai-md-thinking-summary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          Suy ngh\u0129 c\u1EE7a AI ${m?"":'<span class="smaxai-loading-dots"><span></span><span></span><span></span></span>'}
+        </summary>
+        <div class="smaxai-md-thinking-body">
+          ${c}
+        </div>
+      </details>
+    `,t=t.replace(/\[THINKING\][\s\S]*?(?:\[\/THINKING\]|$)/i,"")}t=t.replace(/\[\/?ANSWER\]/gi,"");let i=t.split(`
+`),d=[],e=0;for(;e<i.length;){let r=i[e];if(r.trim()===""){e++;continue}if(r.startsWith(":::")){let s=r.match(/^:::(info|warning|tip|danger|note|success)(?:\s+\[([^\]]*)\])?\s*$/);if(s){let l=s[1],o=s[2]||"",p=[];for(e++;e<i.length&&!i[e].startsWith(":::");)p.push(i[e]),e++;let g=y(p.join(`
+`)),u=l==="warning"||l==="danger"?"&#9888;":l==="tip"||l==="success"?"&#10003;":"&#8505;";d.push(`<div class="smaxai-md-callout smaxai-md-callout-${l}"><span class="smaxai-md-callout-icon">${u}</span><div class="smaxai-md-callout-body">`+(o?`<div class="smaxai-md-callout-title">${x(o)}</div>`:"")+`<div class="smaxai-md-callout-content">${g}</div></div></div>`),e++;continue}}let m=r.match(/^(#{1,4})\s+(.+)$/);if(m){let s=m[1].length,l=m[2].trim();d.push(`<h${s} class="smaxai-md-h${s}">${h(l)}</h${s}>`),e++;continue}if(r.startsWith("```")){let s=r.slice(3).trim(),l=[];for(e++;e<i.length&&!i[e].startsWith("```");)l.push(i[e]),e++;let o=x(l.join(`
+`));d.push('<div class="smaxai-md-code-block">'+(s?`<div class="smaxai-md-code-lang">${x(s)}</div>`:"")+`<pre class="smaxai-md-pre"><code>${o}</code></pre></div>`),e++;continue}if(r.match(/^(-{3,}|\*{3,}|_{3,})\s*$/)||r.trim()==="---"||r.trim()==="***"){d.push('<hr class="smaxai-md-hr">'),e++;continue}if(r.startsWith("> ")){let s=[];for(;e<i.length&&(i[e].startsWith("> ")||i[e].trim()==="");)i[e].startsWith("> ")?s.push(i[e].slice(2)):s.push(""),e++;d.push(`<blockquote class="smaxai-md-blockquote">${y(s.join(`
+`))}</blockquote>`);continue}if(/^[-*+]\s/.test(r)){let s=[];for(;e<i.length&&/^[-*+]\s/.test(i[e]);)s.push(i[e].replace(/^[-*+]\s/,"")),e++;let l=s.map(o=>`<li>${h(x(o))}</li>`).join("");d.push(`<ul class="smaxai-md-ul">${l}</ul>`);continue}if(/^\d+\.\s/.test(r)){let s=[];for(;e<i.length&&/^\d+\.\s/.test(i[e]);)s.push(i[e].replace(/^\d+\.\s/,"")),e++;let l=s.map(o=>`<li>${h(x(o))}</li>`).join("");d.push(`<ol class="smaxai-md-ol">${l}</ol>`);continue}let c=r.match(/^!\[([^\]]*)\]\(([^)]+)\)\s*$/);if(c){d.push(`<div class="smaxai-md-img-wrap"><img class="smaxai-md-img" src="${c[2]}" alt="${x(c[1])}" loading="lazy">`+(c[1]?`<div class="smaxai-md-img-caption">${x(c[1])}</div>`:"")+"</div>"),e++;continue}if(r.includes("|")&&e+1<i.length&&i[e+1].match(/^\|?[\s\-:|]+\|?$/)){let s=[];for(;e<i.length&&i[e].includes("|");)s.push(i[e]),e++;let l=s.filter(o=>!o.match(/^\|?[\s\-:|]+\|?$/)).map(o=>o.split("|").map(p=>p.trim()).filter((p,g)=>g>0&&g<o.split("|").length-1));if(l.length>0){let o=l[0].map(g=>`<th>${h(x(g))}</th>`).join(""),p=l.slice(1).map(g=>`<tr>${g.map(u=>`<td>${h(x(u))}</td>`).join("")}</tr>`).join("");d.push(`<div class="smaxai-md-table-wrap"><table class="smaxai-md-table"><thead><tr>${o}</tr></thead><tbody>${p}</tbody></table></div>`)}continue}d.push(`<p class="smaxai-md-p">${h(x(r))}</p>`),e++}return n+d.join("")}var b=class{constructor(a={}){this.container=null;this.isOpen=!1;this.messages=[];this.userId=null;this.isLoading=!1;this.messageIdCounter=0;this.config={...I,...a},this.createUI(),this.init()}async init(){try{this.userId=await v(),await this.loadHistory(),this.messages.length>0&&this.renderMessages()}catch(a){console.error("SmaxAI Chat: Init error:",a)}}async loadHistory(){if(this.userId)try{let n=await(await fetch(`${this.config.apiBaseUrl}/api/chat/session?user_id=${this.userId}`)).json();n.success&&n.session?.messages&&(this.messages=n.session.messages)}catch(a){console.error("Failed to load chat history:",a)}}async saveHistory(){if(this.userId)try{await fetch(`${this.config.apiBaseUrl}/api/chat/session`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_id:this.userId,messages:this.messages})})}catch(a){console.error("Failed to save chat history:",a)}}createUI(){if(!document.body){document.readyState==="loading"?document.addEventListener("DOMContentLoaded",()=>this.createUI()):setTimeout(()=>this.createUI(),100);return}document.getElementById("smaxai-chat-widget")||(this.container=document.createElement("div"),this.container.id="smaxai-chat-widget",this.container.innerHTML=this.getHTML(),this.injectStyles(),document.body.appendChild(this.container),this.bindEvents())}getHTML(){return`
+      <div class="smaxai-widget">
+        <!-- Floating button -->
         <button class="smaxai-trigger" aria-label="Open AI Assistant">
+          <div class="smaxai-trigger-ping"></div>
           <svg class="smaxai-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>
           </svg>
         </button>
+        
+        <!-- Chat panel -->
         <div class="smaxai-panel">
           <div class="smaxai-header">
-            <div class="smaxai-header-title">
-              <svg class="smaxai-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-              </svg>
-              <span>AI Assistant</span>
+            <div class="smaxai-header-left">
+              <div class="smaxai-header-avatar">
+                <svg class="smaxai-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>
+                </svg>
+              </div>
+              <div class="smaxai-header-titles">
+                <h3 class="smaxai-header-title">SmaxAI Assistant</h3>
+                <p class="smaxai-header-subtitle">H\u1ECFi t\xF4i v\u1EC1 t\xE0i li\u1EC7u Smax...</p>
+              </div>
             </div>
             <div class="smaxai-header-actions">
-              <button class="smaxai-clear-btn" title="Clear chat">Clear</button>
-              <button class="smaxai-close-btn" title="Close">
+              <button class="smaxai-clear-btn" title="X\xF3a l\u1ECBch s\u1EED">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+              </button>
+              <button class="smaxai-close-btn" title="\u0110\xF3ng">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
             </div>
           </div>
-          <div class="smaxai-messages">
-            <div class="smaxai-empty">
-              <div class="smaxai-empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <h3>H\u1ECFi t\xF4i b\u1EA5t c\u1EE9 \u0111i\u1EC1u g\xEC</h3>
-              <p>T\xF4i c\xF3 th\u1EC3 gi\xFAp b\u1EA1n t\xECm hi\u1EC3u v\u1EC1 SmaxAI</p>
-            </div>
-          </div>
+          
+          <div class="smaxai-messages"></div>
+          
           <div class="smaxai-input-area">
-            <input type="text" class="smaxai-input" placeholder="Nh\u1EADp c\xE2u h\u1ECFi c\u1EE7a b\u1EA1n...">
-            <button class="smaxai-send-btn" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            </button>
+            <form class="smaxai-input-form">
+              <input type="text" class="smaxai-input" placeholder="\u0110\u1EB7t c\xE2u h\u1ECFi...">
+              <button type="submit" class="smaxai-send-btn" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 7-7 7 7M12 19V5"/></svg>
+              </button>
+            </form>
           </div>
         </div>
-      </div>`}injectStyles(){if(document.getElementById("smaxai-styles"))return;let a=document.createElement("style");a.id="smaxai-styles",a.textContent=`.smaxai-widget{position:fixed;bottom:24px;right:24px;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}.smaxai-trigger{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(99,102,241,.4);transition:transform .2s,box-shadow .2s}.smaxai-trigger:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(99,102,241,.5)}.smaxai-icon{width:28px;height:28px;color:#fff}.smaxai-panel{position:absolute;bottom:72px;right:0;width:400px;max-width:calc(100vw-48px);height:600px;max-height:calc(100vh-120px);background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.15);display:flex;flex-direction:column;overflow:hidden;opacity:0;visibility:hidden;transform:translateY(20px) scale(.95);transition:all .3s ease}.smaxai-panel.open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}.smaxai-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #eee;background:#fff}.smaxai-header-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;color:#333}.smaxai-header-icon{width:20px;height:20px;color:#6366f1}.smaxai-header-actions{display:flex;gap:8px}.smaxai-clear-btn,.smaxai-close-btn{background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;font-size:13px;color:#666;transition:background .2s}.smaxai-clear-btn:hover,.smaxai-close-btn:hover{background:#f5f5f5}.smaxai-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}.smaxai-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;gap:8px;color:#999}.smaxai-empty-icon{width:48px;height:48px;opacity:.3}.smaxai-empty h3{font-size:16px;color:#555;margin:0}.smaxai-empty p{font-size:13px;margin:0}.smaxai-message{max-width:85%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.5;word-break:break-word}.smaxai-message.user{align-self:flex-end;background:#6366f1;color:#fff;border-bottom-right-radius:4px}.smaxai-message.assistant{align-self:flex-start;background:#f1f5f9;color:#333;border-bottom-left-radius:4px}.smaxai-loading-dots{display:flex;gap:4px;padding:4px 0}.smaxai-loading-dots span{width:6px;height:6px;border-radius:50%;background:#999;animation:smaxai-bounce 1.2s infinite ease-in-out both}.smaxai-loading-dots span:nth-child(1){animation-delay:-.32s}.smaxai-loading-dots span:nth-child(2){animation-delay:-.16s}@keyframes smaxai-bounce{0%,80%,100%{transform:scale(0)}50%{transform:scale(1)}}.smaxai-input-area{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #eee;background:#fff}.smaxai-input{flex:1;border:1px solid #e0e0e0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;transition:border-color .2s}.smaxai-input:focus{border-color:#6366f1}.smaxai-send-btn{width:40px;height:40px;border-radius:10px;background:#6366f1;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:opacity .2s}.smaxai-send-btn:disabled{opacity:.4;cursor:not-allowed}.smaxai-send-btn svg{width:16px;height:16px}
-.smaxai-md{font-size:14px;line-height:1.6}.smaxai-md h1{font-size:1.35em;font-weight:700;margin:10px 0 4px}.smaxai-md h2{font-size:1.2em;font-weight:600;margin:8px 0 3px}.smaxai-md h3,.smaxai-md h4{font-size:1.05em;font-weight:600;margin:6px 0 2px}.smaxai-md-p{margin:3px 0}.smaxai-md-link{color:#6366f1;text-decoration:underline}.smaxai-inline-code{font-family:monospace;font-size:.88em;background:rgba(99,102,241,.1);border-radius:4px;padding:1px 5px;color:#4f46e5}.smaxai-md-code-block{position:relative;margin:8px 0;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;background:#f8f9fa}.smaxai-md-code-lang{padding:4px 12px;font-size:11px;font-family:monospace;color:#9ca3af;background:#eef2ff;border-bottom:1px solid #e5e7eb}.smaxai-md-pre{margin:0;padding:12px;overflow-x:auto;font-size:13px;font-family:monospace;line-height:1.5;color:#374151}.smaxai-md-ul,.smaxai-md-ol{margin:5px 0;padding-left:22px}.smaxai-md-ul{list-style:disc}.smaxai-md-ol{list-style:decimal}.smaxai-md-ul li,.smaxai-md-ol li{margin:2px 0}.smaxai-md-blockquote{border-left:3px solid #6366f1;margin:6px 0;padding:4px 10px;background:rgba(99,102,241,.05);border-radius:0 6px 6px 0;font-style:italic}.smaxai-md-hr{border:none;border-top:1px solid #e5e7eb;margin:10px 0}.smaxai-md-img-wrap{margin:8px 0;text-align:center}.smaxai-md-img{max-width:100%;max-height:280px;border-radius:8px;object-fit:contain}.smaxai-md-img-caption{font-size:12px;color:#9ca3af;margin-top:4px}.smaxai-md-table-wrap{overflow-x:auto;margin:8px 0}.smaxai-md-table{width:100%;border-collapse:collapse;font-size:13px}.smaxai-md-table th{background:#eef2ff;font-weight:600;padding:6px 10px;text-align:left;border:1px solid #e5e7eb}.smaxai-md-table td{padding:5px 10px;border:1px solid #e5e7eb;color:#374151}.smaxai-md-table tr:nth-child(even) td{background:#f9fafb}.smaxai-md-callout{display:flex;gap:8px;margin:8px 0;padding:10px 12px;border-radius:8px;border-left:4px solid;font-size:13.5px}.smaxai-md-callout-icon{flex-shrink:0;line-height:1.5}.smaxai-md-callout-body{flex:1;min-width:0}.smaxai-md-callout-title{font-weight:600;margin-bottom:4px}.smaxai-md-callout-content p{margin:2px 0}.smaxai-md-callout-info{background:#eff6ff;border-color:#3b82f6;color:#1e40af}.smaxai-md-callout-warning{background:#fffbeb;border-color:#f59e0b;color:#92400e}.smaxai-md-callout-tip{background:#f0fdf4;border-color:#22c55e;color:#166534}.smaxai-md-callout-danger{background:#fef2f2;border-color:#ef4444;color:#991b1b}.smaxai-md-callout-note{background:#f8fafc;border-color:#94a3b8;color:#475569}.smaxai-md-callout-success{background:#ecfdf5;border-color:#10b981;color:#065f46}
-@media(prefers-color-scheme:dark){.smaxai-panel{background:#1a1a2e}.smaxai-header{background:#1a1a2e;border-color:#333}.smaxai-header-title{color:#e2e8f0}.smaxai-clear-btn,.smaxai-close-btn{color:#94a3b8}.smaxai-clear-btn:hover,.smaxai-close-btn:hover{background:#333}.smaxai-messages{background:#1a1a2e}.smaxai-message.assistant{background:#252542;color:#e2e8f0}.smaxai-input{background:#252542;border-color:#333;color:#e2e8f0}.smaxai-input::placeholder{color:#64748b}.smaxai-input-area{background:#1a1a2e;border-color:#333}.smaxai-md h1,.smaxai-md h2,.smaxai-md h3,.smaxai-md h4{color:#f9fafb}.smaxai-md-link{color:#818cf8}.smaxai-inline-code{background:rgba(129,140,248,.15);color:#a5b4fc}.smaxai-md-code-block{border-color:#374151;background:#1f2937}.smaxai-md-code-lang{background:#1e1b4b;border-color:#374151;color:#6b7280}.smaxai-md-pre{color:#e5e7eb}.smaxai-md-blockquote{background:rgba(99,102,241,.08);border-color:#6366f1}.smaxai-md-hr{border-color:#374151}.smaxai-md-table th{background:#1f2937;border-color:#374151;color:#f9fafb}.smaxai-md-table td{border-color:#374151;color:#d1d5db}.smaxai-md-table tr:nth-child(even) td{background:#1f2937}}`,document.head.appendChild(a)}bindEvents(){if(!this.container)return;let a=this.container.querySelector(".smaxai-trigger"),s=this.container.querySelector(".smaxai-close-btn"),i=this.container.querySelector(".smaxai-clear-btn"),o=this.container.querySelector(".smaxai-input"),r=this.container.querySelector(".smaxai-send-btn");a?.addEventListener("click",()=>this.toggle()),s?.addEventListener("click",()=>this.close()),i?.addEventListener("click",()=>this.clearChat()),o?.addEventListener("input",()=>r.toggleAttribute("disabled",!o.value.trim())),o?.addEventListener("keydown",m=>{m.key==="Enter"&&!m.shiftKey&&(m.preventDefault(),this.sendMessage())}),r?.addEventListener("click",()=>this.sendMessage())}open(){if(!this.container)return;this.container.querySelector(".smaxai-panel")?.classList.add("open"),this.isOpen=!0,this.config.onOpen(),this.container.querySelector(".smaxai-input")?.focus(),this.renderMessages()}close(){this.container&&(this.container.querySelector(".smaxai-panel")?.classList.remove("open"),this.isOpen=!1,this.config.onClose())}toggle(){this.isOpen?this.close():this.open()}async sendMessage(){if(!this.container||this.isLoading)return;let a=this.container.querySelector(".smaxai-input"),s=this.container.querySelector(".smaxai-send-btn"),i=a.value.trim();if(!i)return;a.value="",s.setAttribute("disabled",""),this.isLoading=!0;let o={id:String(++this.idCounter),role:"user",content:i};this.messages.push(o);let r={id:String(++this.idCounter),role:"assistant",content:"",isStreaming:!0};this.messages.push(r),this.renderMessages();try{let m=this.messages.slice(-8,-2).map(({role:g,content:b})=>({role:g,content:b})),x=await fetch(`${this.config.apiBaseUrl}/api/chat`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:i,lang:this.config.lang,history:m})});if(!x.body)throw new Error("No response body");let f=x.body.getReader(),v=!1;for(;!v;){let{value:g,done:b}=await f.read();v=b,g&&new TextDecoder().decode(g).split("").forEach(y=>{y!==`
-`&&(r.content+=y,this.renderMessages())})}r.isStreaming=!1,await this.saveHistory()}catch(m){r.content="Xin l\u1ED7i, \u0111\xE3 x\u1EA3y ra l\u1ED7i. Vui l\xF2ng th\u1EED l\u1EA1i.",r.isStreaming=!1,console.error("SmaxAI Chat: Send error:",m)}finally{this.isLoading=!1,s.setAttribute("disabled",""),this.renderMessages()}}renderMessages(){if(!this.container)return;let a=this.container.querySelector(".smaxai-messages");if(a){if(a.innerHTML="",this.messages.length===0){a.innerHTML=`<div class="smaxai-empty">
-          <div class="smaxai-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
-          <h3>H\u1ECFi t\xF4i b\u1EA5t c\u1EE9 \u0111i\u1EC1u g\xEC</h3><p>T\xF4i c\xF3 th\u1EC3 gi\xFAp b\u1EA1n t\xECm hi\u1EC3u v\u1EC1 SmaxAI</p>
-        </div>`;return}this.messages.forEach(s=>{let i=document.createElement("div");i.className=`smaxai-message ${s.role}${s.role==="assistant"?" smaxai-md":""}`,s.role==="assistant"&&s.isStreaming?i.innerHTML=u(s.content)+'<span class="smaxai-loading-dots"><span></span><span></span><span></span></span>':s.role==="assistant"?i.innerHTML=u(s.content):i.innerHTML=p(s.content),a.appendChild(i)}),a.scrollTop=a.scrollHeight}}async clearChat(){this.messages=[],this.idCounter=0,t(),this.userId=await l(),this.renderMessages(),this.userId&&await fetch(`${this.config.apiBaseUrl}/api/chat/session?user_id=${this.userId}`,{method:"DELETE"})}destroy(){this.container?.remove(),document.getElementById("smaxai-styles")?.remove()}}let n=null;window.SmaxAIChat={init:(c={})=>(n&&n.destroy(),n=new e(c),n),get widget(){return n}},document.currentScript?.hasAttribute("data-auto-init")&&document.addEventListener("DOMContentLoaded",()=>{window.SmaxAIChat.init()})})();
+
+        <!-- Image Viewer HTML -->
+        <div class="smaxai-image-viewer">
+          <button class="smaxai-image-viewer-close" title="\u0110\xF3ng">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          <img class="smaxai-image-viewer-img" src="" alt="Ph\xF3ng to">
+        </div>
+      </div>
+    `}injectStyles(){if(document.getElementById("smaxai-styles"))return;let a=document.createElement("style");a.id="smaxai-styles",a.textContent=`
+                  .smaxai-widget { position: fixed; bottom: 24px; right: 24px; z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .smaxai-trigger { width: 56px; height: 56px; border-radius: 9999px; background: #FB6E5C; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2); transition: transform 0.3s; position: relative; }
+      .smaxai-trigger:hover { transform: scale(1.05); }
+      .smaxai-trigger-ping { position: absolute; inset: 0; border-radius: 9999px; background: inherit; opacity: 0.2; animation: smaxai-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
+      @keyframes smaxai-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+      .smaxai-icon { width: 24px; height: 24px; position: relative; z-index: 10; }
+      .smaxai-panel { position: absolute; bottom: 72px; right: 0; width: 400px; max-width: calc(100vw - 48px); height: 600px; max-height: calc(100vh - 120px); background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+      .smaxai-panel.open { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+      .smaxai-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #e2e8f0; background: rgba(241, 245, 249, 0.3); }
+      .smaxai-header-left { display: flex; align-items: center; gap: 8px; }
+      .smaxai-header-avatar { display: flex; height: 32px; width: 32px; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(251, 110, 92, 0.1); color: #FB6E5C; }
+      .smaxai-header-icon { width: 16px; height: 16px; }
+      .smaxai-header-titles { display: flex; flex-direction: column; }
+      .smaxai-header-title { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; }
+      .smaxai-header-subtitle { font-size: 12px; color: #64748b; margin: 0; }
+      .smaxai-header-actions { display: flex; gap: 4px; align-items: center; }
+      .smaxai-clear-btn, .smaxai-close-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 6px; cursor: pointer; color: #64748b; transition: all 0.2s; }
+      .smaxai-clear-btn:hover { color: #ef4444; background: #f1f5f9; }
+      .smaxai-close-btn:hover { color: #0f172a; background: #f1f5f9; }
+      .smaxai-clear-btn svg, .smaxai-close-btn svg { width: 16px; height: 16px; }
+      .smaxai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+      .smaxai-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #64748b; padding: 16px; }
+      .smaxai-empty-icon { width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.2; color: #FB6E5C; }
+      .smaxai-empty-icon svg { width: 100%; height: 100%; }
+      .smaxai-empty h3 { font-size: 14px; font-weight: 400; margin: 0; }
+      .smaxai-message { display: flex; flex-direction: column; max-width: 85%; }
+      .smaxai-message.user { align-self: flex-end; align-items: flex-end; }
+      .smaxai-message.assistant { align-self: flex-start; align-items: flex-start; }
+      .smaxai-message-content { padding: 8px 16px; font-size: 14px; line-height: 1.5; border-radius: 16px; word-break: break-word; }
+      .smaxai-message.user .smaxai-message-content { background: #FB6E5C; color: white; border-top-right-radius: 0; }
+      .smaxai-message.assistant .smaxai-message-content { background: #f1f5f9; color: #111827; border-top-left-radius: 0; }
+      .smaxai-loading { display: flex; align-items: center; gap: 8px; color: #6b7280; font-size: 14px; padding: 4px 0; }
+      .smaxai-spinner { width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top-color: #FB6E5C; border-radius: 50%; animation: smaxai-spin 0.8s linear infinite; }
+      @keyframes smaxai-spin { to { transform: rotate(360deg); } }
+      .smaxai-input-area { padding: 16px; border-top: 1px solid #e2e8f0; background: #ffffff; }
+      .smaxai-input-form { display: flex; position: relative; margin: 0; }
+      .smaxai-input { width: 100%; padding: 10px 48px 10px 16px; border: 1px solid #e2e8f0; border-radius: 9999px; font-size: 14px; background: rgba(241, 245, 249, 0.5); outline: none; transition: all 0.2s; }
+      .smaxai-input:focus { border-color: transparent; box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.2); }
+      .smaxai-send-btn { position: absolute; right: 4px; top: 4px; bottom: 4px; width: 32px; height: 32px; border-radius: 9999px; background: transparent; color: #64748b; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+      .smaxai-send-btn:not(:disabled) { background: #FB6E5C; color: white; }
+      .smaxai-send-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+      .smaxai-send-btn svg { width: 16px; height: 16px; }
+      
+      .smaxai-md-thinking { margin: 8px 0; background: #fffcf8; border: 1px solid #ffd8a8; border-radius: 8px; overflow: hidden; }
+      .smaxai-md-thinking-summary { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-weight: 500; font-size: 13px; color: #ea580c; cursor: pointer; user-select: none; list-style: none; }
+      .smaxai-md-thinking-summary::-webkit-details-marker { display: none; }
+      .smaxai-md-thinking-summary svg { width: 14px; height: 14px; }
+      .smaxai-md-thinking-body { padding: 0 12px 12px; font-size: 13px; color: #475569; border-top: 1px solid #ffd8a8; }
+      .smaxai-md-thinking[open] .smaxai-md-thinking-body { display: block; }
+      .smaxai-md-thinking-text { margin: 4px 0; }
+
+      
+      /* Image Viewer */
+      .smaxai-image-viewer { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(4px); }
+      .smaxai-image-viewer.open { opacity: 1; visibility: visible; }
+      .smaxai-image-viewer-img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+      .smaxai-image-viewer.open .smaxai-image-viewer-img { transform: scale(1); }
+      .smaxai-image-viewer-close { position: absolute; top: 24px; right: 24px; width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+      .smaxai-image-viewer-close:hover { background: rgba(255, 255, 255, 0.2); }
+      .smaxai-image-viewer-close svg { width: 24px; height: 24px; }
+      .smaxai-md-img { cursor: zoom-in; }
+
+      /* \u2500\u2500 Markdown content (assistant messages) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+      .smaxai-md { font-size: 14px; line-height: 1.6; }
+
+      .smaxai-md h1 { font-size: 1.35em; font-weight: 700; margin: 12px 0 6px; }
+      .smaxai-md h2 { font-size: 1.2em; font-weight: 600; margin: 10px 0 5px; }
+      .smaxai-md h3 { font-size: 1.1em; font-weight: 600; margin: 8px 0 4px; }
+      .smaxai-md h4 { font-size: 1em; font-weight: 600; margin: 6px 0 3px; }
+
+      .smaxai-md-p { margin: 4px 0; }
+
+      .smaxai-md-link { color: #6366f1; text-decoration: underline; }
+      .smaxai-inline-code {
+        font-family: 'Courier New', monospace;
+        font-size: 0.88em;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 4px;
+        padding: 1px 5px;
+        color: #4f46e5;
+      }
+
+      /* Code block */
+      .smaxai-md-code-block {
+        position: relative;
+        margin: 8px 0;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        background: #f8f9fa;
+      }
+      .smaxai-md-code-lang {
+        padding: 4px 12px;
+        font-size: 11px;
+        font-family: monospace;
+        color: #9ca3af;
+        background: #eef2ff;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .smaxai-md-pre {
+        margin: 0;
+        padding: 12px;
+        overflow-x: auto;
+        font-size: 13px;
+        font-family: 'Courier New', monospace;
+        line-height: 1.5;
+        color: #374151;
+      }
+      .smaxai-md-pre code { font-family: inherit; }
+
+      /* Lists */
+      .smaxai-md-ul, .smaxai-md-ol {
+        margin: 6px 0;
+        padding-left: 24px;
+      }
+      .smaxai-md-ul { list-style: disc; }
+      .smaxai-md-ol { list-style: decimal; }
+      .smaxai-md-ul li, .smaxai-md-ol li { margin: 2px 0; }
+
+      /* Blockquote */
+      .smaxai-md-blockquote {
+        border-left: 3px solid #6366f1;
+        margin: 6px 0;
+        padding: 4px 10px;
+        background: rgba(99, 102, 241, 0.05);
+        border-radius: 0 6px 6px 0;
+        font-style: italic;
+      }
+
+      /* HR */
+      .smaxai-md-hr {
+        border: none;
+        border-top: 1px solid #e5e7eb;
+        margin: 10px 0;
+      }
+
+      /* Image */
+      .smaxai-md-img-wrap { margin: 8px 0; text-align: center; }
+      .smaxai-md-img {
+        max-width: 100%;
+        max-height: 280px;
+        border-radius: 8px;
+        object-fit: contain;
+      }
+      .smaxai-md-img-caption {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 4px;
+      }
+
+      /* Table */
+      .smaxai-md-table-wrap { overflow-x: auto; margin: 8px 0; }
+      .smaxai-md-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .smaxai-md-table th {
+        background: #eef2ff;
+        font-weight: 600;
+        padding: 6px 10px;
+        text-align: left;
+        border: 1px solid #e5e7eb;
+      }
+      .smaxai-md-table td {
+        padding: 5px 10px;
+        border: 1px solid #e5e7eb;
+        color: #374151;
+      }
+      .smaxai-md-table tr:nth-child(even) td { background: #f9fafb; }
+
+      /* Callout */
+      .smaxai-md-callout {
+        display: flex;
+        gap: 8px;
+        margin: 8px 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border-left: 4px solid;
+        font-size: 13.5px;
+      }
+      .smaxai-md-callout-icon { font-size: 1em; flex-shrink: 0; line-height: 1.5; }
+      .smaxai-md-callout-body { flex: 1; min-width: 0; }
+      .smaxai-md-callout-title { font-weight: 600; margin-bottom: 4px; }
+      .smaxai-md-callout-content p { margin: 2px 0; }
+
+      .smaxai-md-callout-info    { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+      .smaxai-md-callout-warning { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
+      .smaxai-md-callout-tip     { background: #f0fdf4; border-color: #22c55e; color: #166534; }
+      .smaxai-md-callout-danger  { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+      .smaxai-md-callout-note    { background: #f8fafc; border-color: #94a3b8; color: #475569; }
+      .smaxai-md-callout-success { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        .smaxai-panel {
+          background: #1f2937;
+        }
+        
+        .smaxai-header {
+          background: #111827;
+          border-bottom-color: #374151;
+        }
+        
+        .smaxai-header-title {
+          color: #f9fafb;
+        }
+        
+        .smaxai-clear-btn:hover,
+        .smaxai-close-btn:hover {
+          background: #374151;
+          color: #f9fafb;
+        }
+        
+        .smaxai-empty-icon {
+          background: #374151;
+        }
+        
+        .smaxai-empty h3 {
+          color: #f9fafb;
+        }
+        
+        .smaxai-message.assistant .smaxai-message-content {
+          background: #374151;
+          color: #f9fafb;
+        }
+        
+        .smaxai-input-area {
+          background: #111827;
+          border-top-color: #374151;
+        }
+        
+        .smaxai-input {
+          background: #374151;
+          border-color: #4b5563;
+          color: #f9fafb;
+        }
+        
+        .smaxai-input:focus {
+          border-color: #6366f1;
+        }
+
+        /* Markdown in dark mode */
+        .smaxai-md h1, .smaxai-md h2, .smaxai-md h3, .smaxai-md h4 { color: #f9fafb; }
+        .smaxai-md-link { color: #818cf8; }
+        .smaxai-inline-code { background: rgba(129, 140, 248, 0.15); color: #a5b4fc; }
+        .smaxai-md-code-block { border-color: #374151; background: #1f2937; }
+        .smaxai-md-code-lang { background: #1e1b4b; border-color: #374151; color: #6b7280; }
+        .smaxai-md-pre { color: #e5e7eb; }
+        .smaxai-md-blockquote { background: rgba(99, 102, 241, 0.08); border-color: #6366f1; }
+        .smaxai-md-hr { border-color: #374151; }
+        .smaxai-md-table th { background: #1f2937; border-color: #374151; color: #f9fafb; }
+        .smaxai-md-table td { border-color: #374151; color: #d1d5db; }
+        .smaxai-md-table tr:nth-child(even) td { background: #1f2937; }
+      }
+    `,document.head.appendChild(a)}bindEvents(){if(!this.container)return;let a=this.container.querySelector(".smaxai-trigger"),n=this.container.querySelector(".smaxai-close-btn"),i=this.container.querySelector(".smaxai-clear-btn"),d=this.container.querySelector(".smaxai-input"),e=this.container.querySelector(".smaxai-send-btn");a?.addEventListener("click",()=>this.toggle()),n?.addEventListener("click",()=>this.close()),i?.addEventListener("click",()=>this.clearChat()),d?.addEventListener("input",()=>{e?.toggleAttribute("disabled",!d.value.trim())}),d?.addEventListener("keydown",o=>{o.key==="Enter"&&!o.shiftKey&&(o.preventDefault(),this.sendMessage())}),this.container.querySelector(".smaxai-input-form")?.addEventListener("submit",o=>{o.preventDefault(),this.sendMessage()}),e?.addEventListener("click",()=>this.sendMessage());let m=this.container.querySelector(".smaxai-messages"),c=this.container.querySelector(".smaxai-image-viewer"),s=this.container.querySelector(".smaxai-image-viewer-img"),l=this.container.querySelector(".smaxai-image-viewer-close");if(m&&c&&s){m.addEventListener("click",p=>{let g=p.target;if(g.tagName.toLowerCase()==="img"&&g.classList.contains("smaxai-md-img")){let u=g;s.src=u.src,c.classList.add("open")}});let o=()=>{c.classList.remove("open"),setTimeout(()=>{c.classList.contains("open")||(s.src="")},300)};l?.addEventListener("click",o),c.addEventListener("click",p=>{p.target===c&&o()}),document.addEventListener("keydown",p=>{p.key==="Escape"&&c.classList.contains("open")&&o()})}}open(){if(!this.container)return;this.container.querySelector(".smaxai-panel")?.classList.add("open"),this.isOpen=!0,this.config.onOpen(),this.container.querySelector(".smaxai-input")?.focus(),this.renderMessages()}close(){if(!this.container)return;this.container.querySelector(".smaxai-panel")?.classList.remove("open"),this.isOpen=!1,this.config.onClose()}toggle(){this.isOpen?this.close():this.open()}async sendMessage(){if(!this.container||this.isLoading)return;let a=this.container.querySelector(".smaxai-input"),n=a?.value.trim();if(!n)return;let i={id:`msg-${++this.messageIdCounter}`,role:"user",content:n};this.messages.push(i),a.value="",this.container.querySelector(".smaxai-send-btn")?.setAttribute("disabled","true");let e={id:`msg-${++this.messageIdCounter}`,role:"assistant",content:"",isStreaming:!0};this.messages.push(e),this.renderMessages(),this.isLoading=!0;try{let r=await fetch(`${this.config.apiBaseUrl}/api/chat`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:n,lang:this.config.lang,history:this.messages.slice(-8,-2).map(s=>({role:s.role,content:s.content}))})});if(!r.ok)throw new Error("Failed to get response");let m=r.body?.getReader();if(!m)throw new Error("No reader");let c=new TextDecoder;for(;;){let{done:s,value:l}=await m.read();if(s)break;if(l){let o=c.decode(l,{stream:!0});e.content+=o,this.renderMessages()}}e.isStreaming=!1,this.saveHistory()}catch(r){console.error("Chat error:",r),e.content="Xin l\u1ED7i, \u0111\xE3 c\xF3 l\u1ED7i x\u1EA3y ra. Vui l\xF2ng th\u1EED l\u1EA1i.",e.isStreaming=!1}finally{this.isLoading=!1,this.renderMessages()}}renderMessages(){if(!this.container)return;let a=this.container.querySelector(".smaxai-messages");if(a){if(this.messages.length===0){a.innerHTML=`
+        <div class="smaxai-empty">
+          <div class="smaxai-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+          </div>
+          <h3>Xin ch\xE0o! T\xF4i c\xF3 th\u1EC3 gi\xFAp g\xEC cho b\u1EA1n?</h3>
+        </div>
+      `;return}a.innerHTML=this.messages.map(n=>`
+      <div class="smaxai-message ${n.role}">
+        <div class="smaxai-message-content ${n.role==="assistant"?"smaxai-md":""}">
+          ${n.isStreaming&&!n.content?`
+            <div class="smaxai-loading">
+              <div class="smaxai-spinner"></div>
+              <span>\u0110ang suy ngh\u0129...</span>
+            </div>
+          `:n.role==="assistant"?y(n.content):x(n.content)}
+        </div>
+
+        <!-- Image Viewer HTML -->
+        <div class="smaxai-image-viewer">
+          <button class="smaxai-image-viewer-close" title="\u0110\xF3ng">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          <img class="smaxai-image-viewer-img" src="" alt="Ph\xF3ng to">
+        </div>
+      </div>
+    `).join(""),a.scrollTop=a.scrollHeight}}async clearChat(){this.messages=[],this.messageIdCounter=0,w(),this.userId=await v(),this.renderMessages(),this.userId&&await fetch(`${this.config.apiBaseUrl}/api/chat/session?user_id=${this.userId}`,{method:"DELETE"})}destroy(){this.container?.remove(),document.getElementById("smaxai-styles")?.remove()}};var f=null,k={init:(t={})=>(f&&f.destroy(),f=new b(t),f),get widget(){return f}};if(typeof window<"u"){window.SmaxAIChat=k;let t=()=>{let a=document.getElementsByTagName("script");for(let n=0;n<a.length;n++){let i=a[n];if(i.hasAttribute("data-auto-init")){let d={},e=i.getAttribute("data-api-base-url"),r=i.getAttribute("data-lang");return e&&(d.apiBaseUrl=e),r&&(d.lang=r),k.init(d)}}};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",t):t()}export{k as SmaxAIChat};

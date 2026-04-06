@@ -331,6 +331,20 @@ export class SmaxAIChatWidget {
   }
 
   private createUI() {
+    // Wait for body to be available if needed
+    if (!document.body) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.createUI())
+      } else {
+        // Fallback for weird environments
+        setTimeout(() => this.createUI(), 100)
+      }
+      return
+    }
+
+    // Check if already created (avoid duplicates if init is called twice manually)
+    if (document.getElementById('smaxai-chat-widget')) return
+
     // Create container
     this.container = document.createElement('div')
     this.container.id = 'smaxai-chat-widget'
@@ -345,6 +359,7 @@ export class SmaxAIChatWidget {
     // Bind events
     this.bindEvents()
   }
+
 
   private getHTML(): string {
     return `

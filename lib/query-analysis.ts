@@ -243,45 +243,47 @@ export function getDisplayNormalizedQuery(query: string): string {
 export function classifyIntent(query: string): QueryIntent {
   const lowerQuery = query.toLowerCase()
   
-  // Check greeting first
-  for (const keyword of INTENT_KEYWORDS.greeting) {
-    if (lowerQuery.includes(keyword)) {
-      return 'greeting'
-    }
-  }
-  
-  // Check off-topic next (critical shield)
+  // 1. Check off-topic first (critical shield)
   for (const keyword of INTENT_KEYWORDS.off_topic) {
     if (lowerQuery.includes(keyword)) {
       return 'off_topic'
     }
   }
 
-  // Check other intents
+  // 2. Check main intents (feature, how-to, comparison, troubleshooting)
+  let detectedIntent: QueryIntent | null = null
   for (const [intent, keywords] of Object.entries(INTENT_KEYWORDS)) {
     if (intent === 'greeting' || intent === 'off_topic' || intent === 'general') continue
     
     for (const keyword of keywords) {
       if (lowerQuery.includes(keyword)) {
-        return intent as QueryIntent
+        detectedIntent = intent as QueryIntent
+        break
       }
     }
+    if (detectedIntent) break
   }
-  
-  // Final heuristic check: if not a greeting/intent and mentions NO software keywords, it might be off-topic
+
+  if (detectedIntent) return detectedIntent
+
+  // 3. Check for channel/feature keywords even if no explicit intent word is found
   const mentionsSoftware = [
     ...CHANNEL_KEYWORDS, 
     ...FEATURE_KEYWORDS, 
-    'smax', 'bot', 'phần mềm', 'tài khoản', 'kết nối', 'cài đặt'
+    'smax', 'bot', 'phần mềm', 'tài khoản', 'kết nối', 'cài đặt', 'liên kết'
   ].some(kw => lowerQuery.includes(kw))
 
-  if (!mentionsSoftware && lowerQuery.length > 20) {
-    // Longer queries with no software keywords are likely off-topic
-    // but we'll mark as general for now and let the prompt handle strictness
-    // unless we are very sure.
-    // For now, let's stick to explicit keyword off_topic to avoid false positives.
-  }
+  if (mentionsSoftware) return 'general'
 
+  // 4. Check greeting last
+  // ONLY return greeting if it's purely a greeting without other substance
+  for (const keyword of INTENT_KEYWORDS.greeting) {
+    const regex = new RegExp(`\\b${keyword}\\b`, 'i')
+    if (regex.test(lowerQuery)) {
+      return 'greeting'
+    }
+  }
+  
   return 'general'
 }
 

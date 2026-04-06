@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { useState, useEffect } from "react"
-import { LayoutDashboard, Star, BarChart3, LogOut, Loader2, TrendingUp, Code2 } from "lucide-react"
+import { LayoutDashboard, Star, BarChart3, LogOut, Loader2, TrendingUp, Code2, Cpu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -141,6 +141,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <Code2 className="h-4 w-4" />
             Mã Nhúng
+          </Link>
+
+          <Link
+            href="/admin/ai-config"
+            className={cn(
+              "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
+              pathname === "/admin/ai-config"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Cpu className="h-4 w-4" />
+            Cấu hình AI
           </Link>
         </nav>
 

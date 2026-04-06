@@ -15,16 +15,7 @@ import {
 } from '@/lib/query-analysis'
 import { enhancedSearch } from '@/lib/enhanced-search'
 
-// Initialize OpenAI client for Token.ai
-const client = new OpenAI({
-  apiKey: process.env.TOKEN_AI_API_KEY || 'dummy',
-  baseURL: process.env.TOKEN_AI_BASE_URL || 'https://token.ai.vn/v1',
-  defaultHeaders: {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Origin': 'https://docs.cdp.vn',
-    'Referer': 'https://docs.cdp.vn/'
-  }
-})
+
 
 // System prompt for RAG
 const RAG_SYSTEM_PROMPT = `
@@ -529,7 +520,27 @@ ${formattedHistory}
     const fullSystemPrompt = `${RAG_SYSTEM_PROMPT}\n${intentPrompt}\n${historyContext}\nCONTEXT:\n${context}`
 
     // Step 4: Stream text using OpenAI SDK directly
-    // Step 4: Stream text using OpenAI SDK directly
+    // Fetch dynamic AI config from DB
+    let aiConfig = null
+    try {
+      const { data } = await supabaseAdmin
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'ai_config')
+        .single()
+      if (data) aiConfig = data.value
+    } catch (e) {
+      console.warn('[Chat] Failed to fetch dynamic AI config, using ENV fallbacks')
+    }
+
+    const defaultBaseURL = process.env.TOKEN_AI_BASE_URL || 'https://token.ai.vn/v1'
+    const defaultAPIKey = process.env.TOKEN_AI_API_KEY || 'dummy'
+    const defaultModel = process.env.CHAT_MODEL || 'gpt-5-chat'
+
+    const baseURL = aiConfig?.baseURL || defaultBaseURL
+    const apiKey = aiConfig?.apiKey || defaultAPIKey
+    const baseModel = aiConfig?.model || defaultModel
+
     // Determine model based on request source (Web/Embed vs Direct API) or explicit override
     const isBrowserRequest = origin && (
       ALLOWED_ORIGINS.includes(origin) || 
@@ -537,11 +548,23 @@ ${formattedHistory}
       origin.endsWith('.cdp.vn')
     )
     
-    // Priority: Explicitly requested model > Browser/Widget default > Direct API default
-    const model = requestedModel || (isBrowserRequest ? (process.env.CHAT_MODEL || 'gpt-5-chat') : 'model-router')
+    // Priority: Explicitly requested model > DB config model > Browser/Widget default > Direct API default
+    const model = requestedModel || (isBrowserRequest ? baseModel : 'model-router')
     
-    console.log(`[Chat] Request from ${isBrowserRequest ? 'Browser/Widget' : 'Direct API'}. Using model: ${model} ${requestedModel ? '(overridden by body)' : ''}`)
-    
+    console.log(`[Chat] Request from ${isBrowserRequest ? 'Browser/Widget' : 'Direct API'}. Using provider: ${aiConfig?.provider || 'ENV'}, model: ${model}`)
+
+    const client = new OpenAI({
+      apiKey,
+      baseURL,
+      defaultHeaders: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Origin': 'https://docs.cdp.vn',
+        'Referer': 'https://docs.cdp.vn/',
+        'HTTP-Referer': 'https://docs.cdp.vn', // Required by OpenRouter
+        'X-Title': 'Smax AI Support' // Recommended by OpenRouter
+      }
+    })
+
     // Prepare messages for OpenAI
     // Note: We include history in system prompt for better context understanding
     // The actual message history is kept minimal to avoid token limits
