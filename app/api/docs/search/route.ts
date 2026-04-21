@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { searchDocs } from '@/lib/docs/service'
+import { verifyApiAccess, unauthorizedResponse } from '@/lib/api-auth'
+import { corsHeaders } from '@/lib/cors'
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin')
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders(origin)
+  })
+}
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get('origin')
+  
+  // Verify access
+  const isAuthorized = await verifyApiAccess(request)
+  if (!isAuthorized) {
+    return unauthorizedResponse(origin)
+  }
+
   try {
     const body = await request.json()
     const { query, lang = 'vi' } = body
@@ -26,12 +44,17 @@ export async function POST(request: NextRequest) {
         lastUpdated: doc.last_updated,
       })),
       count: results.length,
+    }, {
+      headers: corsHeaders(origin)
     })
   } catch (error) {
     console.error('Search error:', error)
     return NextResponse.json({
       success: false,
       error: 'Search failed',
-    }, { status: 500 })
+    }, { 
+      status: 500,
+      headers: corsHeaders(origin)
+    })
   }
 }

@@ -14,6 +14,7 @@ import {
   QueryIntent
 } from '@/lib/query-analysis'
 import { enhancedSearch } from '@/lib/enhanced-search'
+import { verifyApiAccess, unauthorizedResponse } from '@/lib/api-auth'
 
 
 
@@ -356,50 +357,15 @@ export async function OPTIONS(request: NextRequest) {
   })
 }
 
-const SYSTEM_KEY_ID = '00000000-0000-0000-0000-000000000000'
-
-async function verifyAccess(req: NextRequest) {
-  const origin = req.headers.get('origin')
-  const apiKeyHeader = req.headers.get('x-api-key')
-
-  // 1. If it's a browser request from an allowed origin, bypass key check (CORS already handles security)
-  if (origin && (
-    ALLOWED_ORIGINS.includes(origin) || 
-    origin.endsWith('.smax.ai') || 
-    origin.endsWith('.cdp.vn')
-  )) {
-    return true
-  }
-
-  // 2. Otherwise, require x-api-key (e.g. Curl, Postman, unauthorized origin)
-  if (!apiKeyHeader) return false
-
-  // Fetch the current key from Supabase (system record)
-  const { data, error } = await supabaseAdmin
-    .from('documents')
-    .select('content')
-    .eq('id', SYSTEM_KEY_ID)
-    .single()
-
-  if (error || !data) return false
-  return apiKeyHeader === data.content
-}
+// Access verification is now handled via lib/api-auth.ts
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get('origin')
   
   // Verify access (either via allowed origin or API Key)
-  const isAuthorized = await verifyAccess(request)
+  const isAuthorized = await verifyApiAccess(request)
   if (!isAuthorized) {
-    return new Response(JSON.stringify({ 
-      error: 'Unauthorized. Use an allowed origin or provide a valid x-api-key header.' 
-    }), {
-      status: 401,
-      headers: { 
-        'Content-Type': 'application/json',
-        ...corsHeaders(origin)
-      }
-    })
+    return unauthorizedResponse(origin)
   }
 
   try {

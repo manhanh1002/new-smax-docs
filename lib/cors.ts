@@ -29,7 +29,8 @@ export function corsHeaders(origin: string | null): Record<string, string> {
   if (origin && (
     ALLOWED_ORIGINS.includes(origin) || 
     origin.endsWith('.smax.ai') || 
-    origin.endsWith('.cdp.vn')
+    origin.endsWith('.cdp.vn') ||
+    origin.endsWith('.vercel.app')
   )) {
     headers['Access-Control-Allow-Origin'] = origin
     headers['Access-Control-Allow-Credentials'] = 'true'
