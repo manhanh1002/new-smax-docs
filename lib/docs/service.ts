@@ -23,6 +23,7 @@ export interface DocTreeNode {
   slug: string
   title: string
   path: string
+  last_updated: string | null
   children?: DocTreeNode[]
 }
 
@@ -169,6 +170,7 @@ export async function getDocTree(lang: "vi" | "en" = "vi"): Promise<DocTreeNode[
       slug: page.slug,
       title: page.title,
       path: page.path,
+      last_updated: page.last_updated,
       children: [],
     }
     nodeMap.set(page.id, node)
@@ -219,7 +221,14 @@ export async function getDocTree(lang: "vi" | "en" = "vi"): Promise<DocTreeNode[
     if (partsA && !partsB) return -1
     if (!partsA && partsB) return 1
 
-    // Fallback to alphabetical sort
+    // Fallback to time-based sort if both or neither have numbering
+    const dateA = a.last_updated ? new Date(a.last_updated).getTime() : 0
+    const dateB = b.last_updated ? new Date(b.last_updated).getTime() : 0
+    
+    if (dateA !== dateB) {
+      return dateB - dateA // Newest first for docs without numbering
+    }
+
     return a.title.localeCompare(b.title)
   }
 
@@ -319,58 +328,40 @@ export async function getPagerForDocFromOutline(
   lang: "vi" | "en" = "vi"
 ): Promise<{ prev: { title: string; href: string } | null; next: { title: string; href: string } | null }> {
   try {
-    const pages = await getAllDocPages(lang)
+    const tree = await getDocTree(lang)
+    
+    // Flatten the tree to get the global order
+    const flattenedDocs: { title: string; slug: string }[] = []
+    function flatten(nodes: DocTreeNode[]) {
+      for (const node of nodes) {
+        flattenedDocs.push({ title: node.title, slug: node.slug })
+        if (node.children && node.children.length > 0) {
+          flatten(node.children)
+        }
+      }
+    }
+    flatten(tree)
     
     // Normalize current slug
     const normalizedSlug = currentSlug.replace(/^\/+|\/+$/g, '').replace(/^(vi|en)\//, '')
     
-    // Find current document
-    const currentDoc = pages.find(page => {
-      const pageSlug = page.slug.replace(/^\/+|\/+$/g, '')
-      return pageSlug === normalizedSlug || page.slug === normalizedSlug
+    // Find current doc's position in the flattened list
+    const currentIndex = flattenedDocs.findIndex(doc => {
+      const pageSlug = doc.slug.replace(/^\/+|\/+$/g, '')
+      return pageSlug === normalizedSlug || doc.slug === normalizedSlug
     })
     
-    if (!currentDoc) {
+    if (currentIndex === -1) {
       return { prev: null, next: null }
     }
     
-    // Get siblings: docs with same parent_id (excluding current doc)
-    const siblings = pages.filter(page => 
-      page.id !== currentDoc.id && // Exclude current doc
-      page.parent_id === currentDoc.parent_id // Same parent
-    )
+    const prevDoc = (flattenedDocs.length > 1) 
+      ? (currentIndex > 0 ? flattenedDocs[currentIndex - 1] : flattenedDocs[flattenedDocs.length - 1])
+      : null
     
-    // If no siblings, return null
-    if (siblings.length === 0) {
-      return { prev: null, next: null }
-    }
-    
-    // Sort siblings by last_updated (newest first)
-    const sortedSiblings = [...siblings].sort((a, b) => {
-      const dateA = a.last_updated ? new Date(a.last_updated).getTime() : 0
-      const dateB = b.last_updated ? new Date(b.last_updated).getTime() : 0
-      return dateB - dateA // Newest first
-    })
-    
-    // Find current doc's position among siblings (by time)
-    // Since current doc is not in siblings, we need to find where it would be
-    const currentDate = currentDoc.last_updated ? new Date(currentDoc.last_updated).getTime() : 0
-    
-    // Find insertion point for current doc in sorted siblings
-    let insertIndex = 0
-    for (let i = 0; i < sortedSiblings.length; i++) {
-      const siblingDate = sortedSiblings[i].last_updated ? new Date(sortedSiblings[i].last_updated!).getTime() : 0
-      if (currentDate > siblingDate) {
-        insertIndex = i
-        break
-      }
-      insertIndex = i + 1
-    }
-    
-    // Prev = older document (next in sorted array since newest first)
-    // Next = newer document (prev in sorted array since newest first)
-    const prevDoc = insertIndex < sortedSiblings.length ? sortedSiblings[insertIndex] : null
-    const nextDoc = insertIndex > 0 ? sortedSiblings[insertIndex - 1] : null
+    const nextDoc = (flattenedDocs.length > 1)
+      ? (currentIndex < flattenedDocs.length - 1 ? flattenedDocs[currentIndex + 1] : flattenedDocs[0])
+      : null
     
     return {
       prev: prevDoc ? {
