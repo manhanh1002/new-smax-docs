@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react"
 import { Copy, Check, Info, AlertTriangle, Lightbulb, AlertCircle, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { slugify } from "@/lib/docs/utils"
 
 // ============================================================================
 // TYPES
@@ -418,28 +419,33 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
 
   const renderToken = (token: Token, index: number): React.ReactNode => {
     switch (token.type) {
-      case 'heading1':
-        const id1 = (token.content || '').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
+      case 'heading1': {
+        const id = slugify(token.content || '')
         return (
-          <h1 key={index} id={id1} className="mb-4 mt-8 text-3xl font-bold text-foreground scroll-m-20">
-            <a href={`#${id1}`} className="no-underline hover:underline">{renderInline(token.content || '')}</a>
+          <h1 key={index} id={id} className="mb-4 mt-8 text-3xl font-bold text-foreground scroll-m-20">
+            <a href={`#${id}`} className="no-underline hover:underline">{renderInline(token.content || '')}</a>
           </h1>
         )
+      }
       
-      case 'heading2':
-        const id2 = (token.content || '').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
+      case 'heading2': {
+        const id = slugify(token.content || '')
         return (
-          <h2 key={index} id={id2} className="mb-3 mt-6 text-2xl font-semibold text-foreground scroll-m-20">
-            <a href={`#${id2}`} className="no-underline hover:underline">{renderInline(token.content || '')}</a>
+          <h2 key={index} id={id} className="mb-3 mt-6 text-2xl font-semibold text-foreground scroll-m-20">
+            <a href={`#${id}`} className="no-underline hover:underline">{renderInline(token.content || '')}</a>
           </h2>
         )
+      }
       
-      case 'heading3':
-        const id3 = (token.content || '').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
-        return <h3 key={index} id={id3} className="mb-2 mt-4 text-xl font-semibold text-foreground scroll-m-20">{renderInline(token.content || '')}</h3>
+      case 'heading3': {
+        const id = slugify(token.content || '')
+        return <h3 key={index} id={id} className="mb-2 mt-4 text-xl font-semibold text-foreground scroll-m-20">{renderInline(token.content || '')}</h3>
+      }
       
-      case 'heading4':
-        return <h4 key={index} className="mb-2 mt-4 text-lg font-semibold text-foreground">{renderInline(token.content || '')}</h4>
+      case 'heading4': {
+        const id = slugify(token.content || '')
+        return <h4 key={index} id={id} className="mb-2 mt-4 text-lg font-semibold text-foreground scroll-m-20">{renderInline(token.content || '')}</h4>
+      }
       
       case 'paragraph':
         return <p key={index} className="mb-4 text-muted-foreground leading-7 break-words">{renderInline(token.content || '')}</p>

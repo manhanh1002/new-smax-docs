@@ -50,13 +50,19 @@ export function MobileTableOfContents({ toc }: TableOfContentsProps) {
                       "block text-muted-foreground hover:text-foreground transition-colors",
                       item.depth === 1 && "font-semibold"
                     )}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setOpen(false)
-                      document.querySelector(item.url)?.scrollIntoView({
-                        behavior: "smooth",
-                      })
-                    }}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setOpen(false)
+                        const id = item.url.startsWith('#') ? item.url.slice(1) : item.url
+                        const element = document.getElementById(id)
+                        if (element) {
+                          element.scrollIntoView({
+                            behavior: "smooth",
+                          })
+                          // Update URL without jump
+                          window.history.pushState(null, '', item.url)
+                        }
+                      }}
                   >
                     {item.title}
                   </Link>
@@ -118,9 +124,15 @@ export function TableOfContents({ toc }: TableOfContentsProps) {
               )}
               onClick={(e) => {
                 e.preventDefault()
-                document.querySelector(item.url)?.scrollIntoView({
-                  behavior: "smooth",
-                })
+                const id = item.url.startsWith('#') ? item.url.slice(1) : item.url
+                const element = document.getElementById(id)
+                if (element) {
+                  element.scrollIntoView({
+                    behavior: "smooth",
+                  })
+                  // Update URL without jump
+                  window.history.pushState(null, '', item.url)
+                }
               }}
             >
               {item.title}
