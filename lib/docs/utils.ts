@@ -43,7 +43,8 @@ export interface TOCItem {
 }
 
 export function extractTOC(content: string): TOCItem[] {
-  const lines = content.split("\n")
+  const normalizedContent = (content || '').replace(/\\n/g, '\n')
+  const lines = normalizedContent.split("\n")
   const toc: TOCItem[] = []
 
   lines.forEach((line) => {
@@ -92,7 +93,8 @@ export function extractTOC(content: string): TOCItem[] {
 // Calculate reading time (average 200 words per minute)
 export function calculateReadingTime(content: string): number {
   const wordsPerMinute = 200
-  const words = content.trim().split(/\s+/).length
+  const normalizedContent = (content || '').replace(/\\n/g, ' ')
+  const words = normalizedContent.trim().split(/\s+/).length
   return Math.ceil(words / wordsPerMinute)
 }
 
