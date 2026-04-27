@@ -35,7 +35,7 @@ function unescapeMarkdown(text: string) {
   if (!text) return ""
   return text
     .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\r")
+    .replace(/\\r(?!ightarrow)/g, "\r") // Don't mangle \rightarrow
     .replace(/\\t/g, "\t")
     .replace(/\\"/g, '"')
     .replace(/\\'/g, "'")
@@ -110,9 +110,21 @@ function Callout({ type, title, content }: { type: string; title?: string; conte
 // ============================================================================
 
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
-  // 1. Unescape and pre-process
+  // 1. Pre-process icons and unescape
   const processedContent = useMemo(() => {
-    let text = unescapeMarkdown(content)
+    if (!content) return ""
+    
+    // Support Outline/AI icons - do this BEFORE unescape to avoid \r mangling
+    let text = content
+      // Handle LaTeX-style $ \rightarrow $ or similar
+      .replace(/\$\s*\\rightarrow\s*\$/g, "→")
+      .replace(/\$\s*\\leftarrow\s*\$/g, "←")
+      // Handle raw commands
+      .replace(/\\rightarrow/g, "→")
+      .replace(/\\leftarrow/g, "←")
+      .replace(/\\\rightarrow/g, "→") // Handle double escape
+    
+    text = unescapeMarkdown(text)
     
     // Convert :::callout[title]\ncontent\n::: to <div data-callout="...">...</div>
     // This allows ReactMarkdown to handle the blocks

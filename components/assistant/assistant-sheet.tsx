@@ -153,7 +153,18 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        let errorMessage = 'Failed to get response'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorData.message || errorMessage
+        } catch (e) {
+          // If not JSON, try text
+          try {
+            const errorText = await response.text()
+            if (errorText) errorMessage = errorText
+          } catch (t) {}
+        }
+        throw new Error(errorMessage)
       }
 
       const reader = response.body?.getReader()
@@ -179,10 +190,10 @@ export function AssistantSheet({ open, onOpenChange }: AssistantSheetProps) {
         updateMessage(assistantMessage.id, { content: fullContent })
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error:', error)
       updateMessage(assistantMessage.id, { 
-        content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.' 
+        content: `Xin lỗi, đã có lỗi xảy ra: ${error.message || 'Vui lòng thử lại.'}` 
       })
     } finally {
       setIsLoading(false)

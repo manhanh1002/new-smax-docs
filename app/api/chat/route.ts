@@ -365,6 +365,7 @@ export async function POST(request: NextRequest) {
   // Verify access (either via allowed origin or API Key)
   const isAuthorized = await verifyApiAccess(request)
   if (!isAuthorized) {
+    console.warn(`[Chat] Unauthorized access attempt from origin: ${origin}, host: ${request.headers.get('host')}`)
     return unauthorizedResponse(origin)
   }
 
@@ -438,6 +439,7 @@ export async function POST(request: NextRequest) {
 
     // If still no results, try with lower threshold
     if (searchResults.length === 0) {
+      console.log(`[Chat] No results found with threshold ${analysis.suggestedThreshold}, trying fallback search...`)
       try {
         const queryEmbedding = await generateEmbedding(queryForEmbedding)
         searchResults = await searchRelevantDocuments(
@@ -446,6 +448,7 @@ export async function POST(request: NextRequest) {
           0.01,
           20
         )
+        console.log(`[Chat] Fallback search found ${searchResults.length} results`)
       } catch (e) {
         console.error('[Chat] Fallback search also failed:', e)
         searchResults = []
