@@ -72,6 +72,20 @@ export function DocContent({ title, content, slug, lastUpdated, pager, breadcrum
     }
   }, [slug, title, language])
 
+  // Handle scroll to hash on initial load
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.substring(1)
+      const timer = setTimeout(() => {
+        const element = document.getElementById(hash)
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" })
+        }
+      }, 500) // Small delay for content to render
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   const copyPage = () => {
     const fullContent = `# ${title}\n\n${content}`
     copy(fullContent)

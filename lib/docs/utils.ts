@@ -14,24 +14,29 @@ export function slugify(text: string): string {
     .replace(/-+$/, "") // Trim - from end of text
 }
 
-// Strip markdown syntax from text
+// Strip markdown syntax and HTML from text
 export function stripMarkdown(text: string): string {
+  if (!text) return ""
   return text
+    // Remove HTML tags
+    .replace(/<[^>]*>/g, "")
+    // Remove custom IDs like {#custom-id}
+    .replace(/\{#.*?\}/g, "")
     // Remove bold/italic
-    .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .replace(/___(.*?)___/g, '$1')
-    .replace(/__(.*?)__/g, '$1')
-    .replace(/_(.*?)_/g, '$1')
-    // Remove links
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\*\*\*(.*?)\*\*\*/g, "$1")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/___(.*?)___/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/_(.*?)_/g, "$1")
+    // Remove links [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     // Remove inline code
-    .replace(/`([^`]+)`/g, '$1')
+    .replace(/`([^`]+)`/g, "$1")
     // Remove images
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
-    // Remove headers markers
-    .replace(/^#+\s*/gm, '')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")
+    // Remove header markers
+    .replace(/^#+\s*/gm, "")
     // Clean up extra whitespace
     .trim()
 }
@@ -43,46 +48,29 @@ export interface TOCItem {
 }
 
 export function extractTOC(content: string): TOCItem[] {
-  const normalizedContent = (content || '').replace(/\\n/g, '\n')
+  const normalizedContent = (content || "").replace(/\\n/g, "\n")
   const lines = normalizedContent.split("\n")
   const toc: TOCItem[] = []
 
   lines.forEach((line) => {
-    if (line.startsWith("# ") && !line.startsWith("## ")) {
-      // H1 heading
-      const rawTitle = line.slice(2).trim()
+    const trimmedLine = line.trim()
+    // Match # to #### headings
+    const match = trimmedLine.match(/^(#{1,4})\s+(.+)$/)
+    
+    if (match) {
+      const level = match[1].length
+      const rawTitle = match[2].trim()
+      
+      // Skip headings that are just images or empty
+      if (!rawTitle || rawTitle.startsWith("![")) return
+
       const title = stripMarkdown(rawTitle)
+      if (!title) return
+
       toc.push({
         title,
         url: `#${slugify(title)}`,
-        depth: 1,
-      })
-    } else if (line.startsWith("## ") && !line.startsWith("### ")) {
-      // H2 heading
-      const rawTitle = line.slice(3).trim()
-      const title = stripMarkdown(rawTitle)
-      toc.push({
-        title,
-        url: `#${slugify(title)}`,
-        depth: 2,
-      })
-    } else if (line.startsWith("### ") && !line.startsWith("#### ")) {
-      // H3 heading
-      const rawTitle = line.slice(4).trim()
-      const title = stripMarkdown(rawTitle)
-      toc.push({
-        title,
-        url: `#${slugify(title)}`,
-        depth: 3,
-      })
-    } else if (line.startsWith("#### ")) {
-      // H4 heading
-      const rawTitle = line.slice(5).trim()
-      const title = stripMarkdown(rawTitle)
-      toc.push({
-        title,
-        url: `#${slugify(title)}`,
-        depth: 4,
+        depth: level,
       })
     }
   })

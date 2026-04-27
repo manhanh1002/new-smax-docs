@@ -41,6 +41,24 @@ function unescapeMarkdown(text: string) {
     .replace(/\\'/g, "'")
 }
 
+/**
+ * Extracts plain text from React children.
+ * Necessary because ReactMarkdown headings can contain formatted text (bold, links, etc.)
+ * which results in children being an array of strings and elements.
+ */
+function getPlainText(children: any): string {
+  return React.Children.toArray(children)
+    .map((child) => {
+      if (typeof child === "string") return child
+      if (typeof child === "number") return String(child)
+      if (React.isValidElement(child) && child.props.children) {
+        return getPlainText(child.props.children)
+      }
+      return ""
+    })
+    .join("")
+}
+
 function handleImageUrl(src: string) {
   if (!src) return ""
   
@@ -178,7 +196,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             rehypePlugins={[rehypeRaw]}
             components={{
               h1: ({ children }) => {
-                const id = slugify(String(children))
+                const id = slugify(getPlainText(children))
                 return (
                   <h1 id={id} className="mb-4 mt-8 text-3xl font-bold text-foreground scroll-m-20">
                     <a href={`#${id}`} className="no-underline hover:underline">{children}</a>
@@ -186,7 +204,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                 )
               },
               h2: ({ children }) => {
-                const id = slugify(String(children))
+                const id = slugify(getPlainText(children))
                 return (
                   <h2 id={id} className="mb-3 mt-6 text-2xl font-semibold text-foreground scroll-m-20">
                     <a href={`#${id}`} className="no-underline hover:underline">{children}</a>
@@ -194,11 +212,11 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                 )
               },
               h3: ({ children }) => {
-                const id = slugify(String(children))
+                const id = slugify(getPlainText(children))
                 return <h3 id={id} className="mb-2 mt-4 text-xl font-semibold text-foreground scroll-m-20">{children}</h3>
               },
               h4: ({ children }) => {
-                const id = slugify(String(children))
+                const id = slugify(getPlainText(children))
                 return <h4 id={id} className="mb-2 mt-4 text-lg font-semibold text-foreground scroll-m-20">{children}</h4>
               },
               p: ({ children }) => <p className="mb-4 text-muted-foreground leading-7 last:mb-0">{children}</p>,
