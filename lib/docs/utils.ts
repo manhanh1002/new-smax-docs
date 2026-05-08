@@ -14,6 +14,53 @@ export function slugify(text: string): string {
     .replace(/-+$/, "") // Trim - from end of text
 }
 
+/**
+ * Helper to strip Outline ID suffix from urlId
+ * Outline format: "ten-doc-ID" where ID is ~10-12 alphanumeric chars
+ */
+export function stripOutlineId(urlId: string): string {
+  if (!urlId) return ""
+
+  // Strip language prefix if present
+  let clean = urlId.replace(/^(vi|en)\//, "")
+
+  // Pattern: ends with "-XXXXXXXXXX" (dash followed by ~10-12 alphanumeric chars)
+  const match = clean.match(/^(.+)-([a-zA-Z0-9]{8,12})$/)
+  if (match) {
+    clean = match[1]
+  }
+
+  return clean
+}
+
+/**
+ * Helper to strip leading numbers from slug
+ * e.g. "1-gioi-thieu" -> "gioi-thieu"
+ */
+export function stripLeadingNumber(slug: string): string {
+  if (!slug) return ""
+  return slug.replace(/^\d+-/, "")
+}
+
+/**
+ * Helper to clean an Outline path or slug fully
+ * Extracts the last part, removes ID and leading numbers
+ */
+export function cleanOutlineSlug(path: string): string {
+  if (!path) return ""
+
+  // Remove /doc/ prefix if present
+  let clean = path.replace(/^\/?doc\//, "")
+
+  // Take only the last segment if it's a full path
+  const segments = clean.split("/")
+  const lastPart = segments[segments.length - 1]
+
+  // Clean ID and leading numbers
+  const withoutId = stripOutlineId(lastPart)
+  return stripLeadingNumber(withoutId)
+}
+
 // Strip markdown syntax and HTML from text
 export function stripMarkdown(text: string): string {
   if (!text) return ""

@@ -1,7 +1,20 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware-utils";
+import { cleanOutlineSlug } from "@/lib/docs/utils";
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Redirect Outline-style links: /doc/alias-ID -> /vi/alias
+  if (pathname.startsWith("/doc/")) {
+    const cleanSlug = cleanOutlineSlug(pathname);
+    if (cleanSlug) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/vi/${cleanSlug}`;
+      return NextResponse.redirect(url, { status: 301 });
+    }
+  }
+
   return await updateSession(request);
 }
 

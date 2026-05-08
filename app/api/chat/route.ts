@@ -15,6 +15,7 @@ import {
 } from '@/lib/query-analysis'
 import { enhancedSearch } from '@/lib/enhanced-search'
 import { verifyApiAccess, unauthorizedResponse } from '@/lib/api-auth'
+import { cleanOutlineSlug } from '@/lib/docs/utils'
 
 
 
@@ -259,7 +260,7 @@ function buildEnhancedContext(results: SearchResult[], lang: string, intent: Que
     const firstChunk = chunks[0]
     if (firstChunk.url) {
       const parts = firstChunk.url.split('/')
-      slug = cleanSlug(parts[parts.length - 1])
+      slug = cleanOutlineSlug(parts[parts.length - 1])
     } else {
       slug = docTitle
         .toLowerCase()
@@ -292,17 +293,7 @@ function buildEnhancedContext(results: SearchResult[], lang: string, intent: Que
   return contextParts.join('\n\n---\n\n')
 }
 
-// Helper to strip Outline ID suffix from urlId (keep numbering)
-function cleanSlug(urlId: string): string {
-  if (!urlId) return ''
-  let clean = urlId.replace(/^(vi|en)\//, '')
-  // If it starts with /doc/ remove it (Outline URL format: /doc/slug-ID)
-  clean = clean.replace(/^\/?doc\//, '')
-  
-  const match = clean.match(/^(.+)-([a-zA-Z0-9]{8,12})$/)
-  if (match) return match[1]
-  return clean
-}
+// Helper cleanSlug moved to utils.ts (using cleanOutlineSlug)
 
 // Build context from search results
 function buildContext(results: SearchResult[], lang: string): string {
@@ -315,7 +306,7 @@ function buildContext(results: SearchResult[], lang: string): string {
     let slug = ''
     if (result.url) {
         const parts = result.url.split('/')
-        slug = cleanSlug(parts[parts.length - 1])
+        slug = cleanOutlineSlug(parts[parts.length - 1])
     } else {
         // Fallback to title based slug if url is missing
         const title = result.title || ''

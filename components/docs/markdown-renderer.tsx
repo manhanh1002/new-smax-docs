@@ -7,7 +7,9 @@ import rehypeRaw from "rehype-raw"
 import { Copy, Check, Info, AlertTriangle, Lightbulb, AlertCircle, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { slugify } from "@/lib/docs/utils"
+import { slugify, cleanOutlineSlug } from "@/lib/docs/utils"
+import Link from "next/link"
+import { useLanguage } from "@/lib/context/language-context"
 
 // ============================================================================
 // TYPES & CONFIG
@@ -128,6 +130,7 @@ function Callout({ type, title, content }: { type: string; title?: string; conte
 // ============================================================================
 
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+  const { language } = useLanguage()
   // 1. Pre-process icons and unescape
   const processedContent = useMemo(() => {
     if (!content) return ""
@@ -274,15 +277,36 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
               ),
               a: ({ href, children }) => {
                 const isExternal = href?.startsWith("http")
+                let finalHref = href || ""
+
+                // Handle Outline internal links: /doc/alias-ID -> /vi/alias
+                if (finalHref.startsWith("/doc/")) {
+                  const cleanSlug = cleanOutlineSlug(finalHref)
+                  if (cleanSlug) {
+                    finalHref = `/${language}/${cleanSlug}`
+                  }
+                }
+
+                if (isExternal) {
+                  return (
+                    <a
+                      href={finalHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline underline-offset-4 hover:text-primary/80 break-all"
+                    >
+                      {children}
+                    </a>
+                  )
+                }
+
                 return (
-                  <a
-                    href={href}
-                    target={isExternal ? "_blank" : undefined}
-                    rel={isExternal ? "noopener noreferrer" : undefined}
+                  <Link
+                    href={finalHref}
                     className="text-primary underline underline-offset-4 hover:text-primary/80 break-all"
                   >
                     {children}
-                  </a>
+                  </Link>
                 )
               },
               hr: () => <hr className="my-8 border-border" />,

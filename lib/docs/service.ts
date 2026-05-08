@@ -2,6 +2,7 @@
 // Service layer for fetching documentation from Outline API
 
 import { getOutlineDocuments, getOutlineDocument, type OutlineDocument } from '@/lib/outline'
+import { stripOutlineId, stripLeadingNumber } from './utils'
 
 export interface DocPage {
   id: string
@@ -258,31 +259,7 @@ function generateSlug(title: string | undefined | null): string {
     .replace(/^-+|-+$/g, '')
 }
 
-// Helper to strip Outline ID suffix from urlId
-// Outline format: "ten-doc-ID" where ID is ~10 alphanumeric chars
-// We want to return just "ten-doc"
-function stripOutlineId(urlId: string): string {
-  if (!urlId) return ''
-  
-  // Strip language prefix if present
-  let clean = urlId.replace(/^(vi|en)\//, '')
-  
-  // Pattern: ends with "-XXXXXXXXXX" (dash followed by ~10 alphanumeric chars)
-  // Match and remove the ID suffix
-  const match = clean.match(/^(.+)-([a-zA-Z0-9]{8,12})$/)
-  if (match) {
-    clean = match[1] // Return just the name part (keep numbering if present)
-  }
-  
-  return clean
-}
-
-// Helper to strip leading numbers from slug
-// e.g. "1-gioi-thieu" -> "gioi-thieu"
-function stripLeadingNumber(slug: string): string {
-  if (!slug) return ''
-  return slug.replace(/^\d+-/, '')
-}
+// Helpers moved to utils.ts
 
 // Helper to map Outline document to DocPage
 function mapOutlineToDocPage(doc: OutlineDocument, lang: string): DocPage {
